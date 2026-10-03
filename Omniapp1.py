@@ -2,34 +2,60 @@ import os
 import requests
 import streamlit as st
 
+
 # ==========================================================
 # OMNI AI
 # Omni-Agentic Intelligent Automation System
 # Demo Mode + Grok API Mode
+# Database-Free Architecture
+# ==========================================================
+
+
+# ==========================================================
+# PAGE CONFIGURATION
 # ==========================================================
 
 st.set_page_config(
     page_title="OMNI AI",
     page_icon="🤖",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
+
 # ==========================================================
-# AGENTS
+# AGENT DEFINITIONS
 # ==========================================================
 
 AGENTS = {
-    "🧠 AI Orchestrator": "Central request analysis and agent coordination.",
-    "⏰ Daily Reminder Agent": "Reminders, deadlines and daily routines.",
-    "❤️ Health & Wellness Agent": "Wellness, fitness and appointment organization.",
-    "📅 Calendar & Schedule Agent": "Meetings, events and schedule planning.",
-    "📚 Learning & Education Agent": "Learning plans, courses and study schedules.",
-    "📝 Productivity & Task Management Agent": "Tasks, priorities, projects and checklists.",
-    "💰 Finance & Expense Management Agent": "Expenses, budgets and spending organization.",
-    "🌐 Information & Communication Agent": "Emails, messages, reports and announcements.",
-    "🤖 Robotics Agent": "Robotics, embedded systems, sensors and automation.",
-    "🚁 Drones & Autonomous Systems Agent": "Drones, UAVs, navigation and autonomous systems."
+    "⏰ Daily Reminder Agent":
+        "Manages reminders, deadlines, routines and daily activities.",
+
+    "❤️ Health & Wellness Agent":
+        "Organizes wellness routines, fitness activities and appointments.",
+
+    "📅 Calendar & Schedule Agent":
+        "Manages meetings, classes, events, appointments and schedules.",
+
+    "📚 Learning & Education Agent":
+        "Creates learning plans, study schedules, courses and revision plans.",
+
+    "📝 Productivity & Task Management Agent":
+        "Manages tasks, priorities, projects, notes and checklists.",
+
+    "💰 Finance & Expense Management Agent":
+        "Organizes user-provided expenses, budgets and spending summaries.",
+
+    "🌐 Information & Communication Agent":
+        "Creates emails, messages, reports, announcements and summaries.",
+
+    "🤖 Robotics Agent":
+        "Provides assistance for robotics, embedded systems, sensors and automation.",
+
+    "🚁 Drones & Autonomous Systems Agent":
+        "Supports UAVs, drones, navigation, computer vision and autonomous systems."
 }
+
 
 # ==========================================================
 # SESSION STATE
@@ -48,59 +74,109 @@ def detect_agent(request):
     text = request.lower()
 
     if any(word in text for word in [
-        "reminder", "remind", "deadline", "routine", "alarm"
+        "reminder",
+        "remind",
+        "deadline",
+        "routine",
+        "alarm"
     ]):
         return "⏰ Daily Reminder Agent"
 
     if any(word in text for word in [
-        "health", "fitness", "wellness", "exercise",
-        "workout", "diet"
+        "health",
+        "fitness",
+        "wellness",
+        "exercise",
+        "workout",
+        "diet"
     ]):
         return "❤️ Health & Wellness Agent"
 
     if any(word in text for word in [
-        "calendar", "schedule", "meeting", "appointment",
-        "event", "timetable", "class"
+        "calendar",
+        "schedule",
+        "meeting",
+        "appointment",
+        "event",
+        "timetable",
+        "class"
     ]):
         return "📅 Calendar & Schedule Agent"
 
     if any(word in text for word in [
-        "learn", "learning", "study", "education",
-        "python", "course", "exam", "revision",
-        "training", "lesson", "programming"
+        "learn",
+        "learning",
+        "study",
+        "education",
+        "python",
+        "course",
+        "exam",
+        "revision",
+        "training",
+        "lesson",
+        "programming",
+        "ai course"
     ]):
         return "📚 Learning & Education Agent"
 
     if any(word in text for word in [
-        "task", "tasks", "project", "productivity",
-        "todo", "to-do", "checklist", "priority",
+        "task",
+        "tasks",
+        "project",
+        "productivity",
+        "todo",
+        "to-do",
+        "checklist",
+        "priority",
         "priorities"
     ]):
         return "📝 Productivity & Task Management Agent"
 
     if any(word in text for word in [
-        "expense", "expenses", "budget", "money",
-        "finance", "financial", "spending", "cost",
+        "expense",
+        "expenses",
+        "budget",
+        "money",
+        "finance",
+        "financial",
+        "spending",
+        "cost",
         "payment"
     ]):
         return "💰 Finance & Expense Management Agent"
 
     if any(word in text for word in [
-        "email", "message", "announcement", "report",
-        "letter", "communication", "draft"
+        "email",
+        "message",
+        "announcement",
+        "report",
+        "letter",
+        "communication",
+        "draft"
     ]):
         return "🌐 Information & Communication Agent"
 
     if any(word in text for word in [
-        "robot", "robotics", "arduino", "raspberry pi",
-        "sensor", "motor", "embedded", "automation",
+        "robot",
+        "robotics",
+        "arduino",
+        "raspberry pi",
+        "sensor",
+        "motor",
+        "embedded",
+        "automation",
         "robotic arm"
     ]):
         return "🤖 Robotics Agent"
 
     if any(word in text for word in [
-        "drone", "uav", "unmanned", "autonomous",
-        "navigation", "flight", "quadcopter"
+        "drone",
+        "uav",
+        "unmanned",
+        "autonomous",
+        "navigation",
+        "flight",
+        "quadcopter"
     ]):
         return "🚁 Drones & Autonomous Systems Agent"
 
@@ -113,24 +189,27 @@ def detect_agent(request):
 
 def demo_response(request, agent):
 
-    responses = {
+    if agent == "🧠 AI Orchestrator":
 
-        "🧠 AI Orchestrator": (
+        return (
             "## 🧠 AI Orchestrator\n\n"
             "**Your Request:**\n\n"
             + request
             + "\n\n"
-            "OMNI AI analyzed the request and routed it "
-            "through the Master Agent.\n\n"
+            "### Agentic Analysis\n\n"
+            "OMNI AI analyzed your request and selected "
+            "the appropriate processing route.\n\n"
             "### Workflow\n\n"
-            "1. Request received\n"
+            "1. User request received\n"
             "2. Request analyzed\n"
-            "3. Agent selected\n"
+            "3. Specialized agent identified\n"
             "4. Response generated\n\n"
             "✅ Orchestrator Demo completed."
-        ),
+        )
 
-        "⏰ Daily Reminder Agent": (
+    if agent == "⏰ Daily Reminder Agent":
+
+        return (
             "## ⏰ Daily Reminder Agent\n\n"
             "**Your Request:**\n\n"
             + request
@@ -138,12 +217,20 @@ def demo_response(request, agent):
             "### Demo Reminder Plan\n\n"
             "- Morning routine\n"
             "- Priority task reminder\n"
+            "- Important deadline\n"
             "- Afternoon review\n"
             "- Evening daily review\n\n"
+            "### Workflow\n\n"
+            "1. Identify reminder\n"
+            "2. Determine priority\n"
+            "3. Organize time\n"
+            "4. Prepare reminder\n\n"
             "✅ Reminder Demo completed."
-        ),
+        )
 
-        "❤️ Health & Wellness Agent": (
+    if agent == "❤️ Health & Wellness Agent":
+
+        return (
             "## ❤️ Health & Wellness Agent\n\n"
             "**Your Request:**\n\n"
             + request
@@ -151,13 +238,23 @@ def demo_response(request, agent):
             "### Demo Wellness Plan\n\n"
             "- Morning activity\n"
             "- Hydration reminder\n"
-            "- Exercise session\n"
+            "- Fitness session\n"
             "- Rest period\n"
             "- Evening wellness review\n\n"
-            "✅ Wellness Demo completed."
-        ),
+            "### Workflow\n\n"
+            "1. Identify wellness activity\n"
+            "2. Organize routine\n"
+            "3. Schedule activity\n"
+            "4. Review progress\n\n"
+            "✅ Wellness Demo completed.\n\n"
+            "> This is a general wellness organization "
+            "demonstration and does not replace professional "
+            "medical advice."
+        )
 
-        "📅 Calendar & Schedule Agent": (
+    if agent == "📅 Calendar & Schedule Agent":
+
+        return (
             "## 📅 Calendar & Schedule Agent\n\n"
             "**Your Request:**\n\n"
             + request
@@ -165,71 +262,119 @@ def demo_response(request, agent):
             "### Demo Schedule\n\n"
             "| Time | Activity |\n"
             "|---|---|\n"
-            "| 09:00 | Meeting / Class |\n"
-            "| 11:00 | Project Work |\n"
-            "| 01:00 | Lunch |\n"
-            "| 03:00 | Review |\n"
-            "| 05:00 | Follow-up |\n\n"
+            "| 09:00 AM | Meeting / Class |\n"
+            "| 11:00 AM | Project Work |\n"
+            "| 01:00 PM | Lunch |\n"
+            "| 03:00 PM | Review |\n"
+            "| 05:00 PM | Follow-up |\n\n"
+            "### Workflow\n\n"
+            "1. Identify event\n"
+            "2. Select time\n"
+            "3. Organize schedule\n"
+            "4. Review conflicts\n\n"
             "✅ Calendar Demo completed."
-        ),
+        )
 
-        "📚 Learning & Education Agent": (
+    if agent == "📚 Learning & Education Agent":
+
+        return (
             "## 📚 Learning & Education Agent\n\n"
             "**Your Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Learning Roadmap\n\n"
-            "1. Fundamentals\n"
-            "2. Practical exercises\n"
-            "3. Mini projects\n"
-            "4. Advanced practice\n"
-            "5. Final project\n\n"
+            "#### Phase 1 — Fundamentals\n"
+            "- Basic concepts\n"
+            "- Terminology\n"
+            "- Simple exercises\n\n"
+            "#### Phase 2 — Practical Learning\n"
+            "- Practical exercises\n"
+            "- Mini projects\n"
+            "- Regular practice\n\n"
+            "#### Phase 3 — Advanced Practice\n"
+            "- Advanced concepts\n"
+            "- Complete project\n"
+            "- Testing and improvement\n\n"
+            "### Workflow\n\n"
+            "1. Identify learning objective\n"
+            "2. Create roadmap\n"
+            "3. Schedule learning\n"
+            "4. Practice\n"
+            "5. Review progress\n\n"
             "✅ Learning Demo completed."
-        ),
+        )
 
-        "📝 Productivity & Task Management Agent": (
+    if agent == "📝 Productivity & Task Management Agent":
+
+        return (
             "## 📝 Productivity & Task Management Agent\n\n"
             "**Your Request:**\n\n"
             + request
             + "\n\n"
-            "### Demo Workflow\n\n"
+            "### Demo Priority System\n\n"
+            "**High Priority**\n"
+            "- Urgent tasks\n"
+            "- Important deadlines\n\n"
+            "**Medium Priority**\n"
+            "- Project activities\n"
+            "- Follow-up work\n\n"
+            "**Low Priority**\n"
+            "- Administrative tasks\n"
+            "- Optional activities\n\n"
+            "### Workflow\n\n"
             "1. Identify tasks\n"
-            "2. Set priorities\n"
-            "3. Complete high-priority work\n"
-            "4. Review progress\n"
-            "5. Update remaining tasks\n\n"
+            "2. Assign priorities\n"
+            "3. Complete important work\n"
+            "4. Review progress\n\n"
             "✅ Productivity Demo completed."
-        ),
+        )
 
-        "💰 Finance & Expense Management Agent": (
+    if agent == "💰 Finance & Expense Management Agent":
+
+        return (
             "## 💰 Finance & Expense Management Agent\n\n"
             "**Your Request:**\n\n"
             + request
             + "\n\n"
-            "### Demo Categories\n\n"
-            "- Food\n"
-            "- Transport\n"
-            "- Education\n"
-            "- Utilities\n"
-            "- Other\n\n"
+            "### Demo Expense Categories\n\n"
+            "| Category | Example |\n"
+            "|---|---|\n"
+            "| Food | Daily meals |\n"
+            "| Transport | Fuel / travel |\n"
+            "| Education | Courses / books |\n"
+            "| Utilities | Electricity / Internet |\n"
+            "| Other | Miscellaneous |\n\n"
+            "### Workflow\n\n"
+            "1. Record expense\n"
+            "2. Categorize expense\n"
+            "3. Calculate totals\n"
+            "4. Review spending\n"
+            "5. Prepare summary\n\n"
             "✅ Finance Demo completed."
-        ),
+        )
 
-        "🌐 Information & Communication Agent": (
+    if agent == "🌐 Information & Communication Agent":
+
+        return (
             "## 🌐 Information & Communication Agent\n\n"
             "**Your Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Communication\n\n"
+            "**AI Workshop Announcement**\n\n"
             "Dear Team,\n\n"
-            "This is a demonstration communication generated "
-            "by OMNI AI.\n\n"
+            "This is a demonstration communication "
+            "generated by OMNI AI.\n\n"
+            "The requested information has been "
+            "structured for professional communication.\n\n"
             "Regards,\n"
             "OMNI AI\n\n"
             "✅ Communication Demo completed."
-        ),
+        )
 
-        "🤖 Robotics Agent": (
+    if agent == "🤖 Robotics Agent":
+
+        return (
             "## 🤖 Robotics Agent\n\n"
             "**Your Request:**\n\n"
             + request
@@ -246,17 +391,27 @@ def demo_response(request, agent):
             "Motor Controller\n"
             "↓\n"
             "Robot Actuators\n\n"
-            "### Components\n\n"
+            "### Possible Components\n\n"
             "- Raspberry Pi\n"
             "- Arduino / ESP32\n"
             "- Camera\n"
-            "- Sensors\n"
-            "- Motor Driver\n"
-            "- Motors\n\n"
+            "- Ultrasonic sensors\n"
+            "- Motor driver\n"
+            "- DC motors\n"
+            "- Battery\n\n"
+            "### Development Steps\n\n"
+            "1. Define robot objective\n"
+            "2. Select hardware\n"
+            "3. Connect sensors\n"
+            "4. Develop control logic\n"
+            "5. Add AI capability\n"
+            "6. Test the system\n\n"
             "✅ Robotics Demo completed."
-        ),
+        )
 
-        "🚁 Drones & Autonomous Systems Agent": (
+    if agent == "🚁 Drones & Autonomous Systems Agent":
+
+        return (
             "## 🚁 Drones & Autonomous Systems Agent\n\n"
             "**Your Request:**\n\n"
             + request
@@ -278,19 +433,26 @@ def demo_response(request, agent):
             "- Navigation\n"
             "- Obstacle detection\n"
             "- Path planning\n"
-            "- Computer vision\n\n"
+            "- Computer vision\n"
+            "- Autonomous inspection\n\n"
+            "### Development Workflow\n\n"
+            "1. Define mission\n"
+            "2. Select sensors\n"
+            "3. Design navigation\n"
+            "4. Add computer vision\n"
+            "5. Implement safety logic\n"
+            "6. Test in simulation\n\n"
             "✅ Autonomous Systems Demo completed."
         )
-    }
 
-    return responses.get(
-        agent,
-        responses["🧠 AI Orchestrator"]
+    return (
+        "## 🧠 AI Orchestrator\n\n"
+        "Request processed successfully."
     )
 
 
 # ==========================================================
-# GROK API
+# GROK API RESPONSE
 # ==========================================================
 
 def grok_response(request, agent, api_key):
@@ -299,14 +461,16 @@ def grok_response(request, agent, api_key):
 
     system_prompt = (
         "You are OMNI AI, an intelligent multi-agent "
-        "automation system. You have a central AI "
-        "Orchestrator and specialized agents. "
-        "The selected agent for this request is: "
+        "automation platform.\n\n"
+        "The user request has been routed to this agent:\n"
         + agent
-        + ". Respond as that specialized agent. "
-        "Give practical, structured and useful answers. "
-        "Do not claim that an action was actually performed "
-        "unless the application has a real tool for that action."
+        + "\n\n"
+        "Act as this specialized agent.\n"
+        "Provide practical, structured and useful answers.\n"
+        "Use headings, lists and tables where appropriate.\n"
+        "Do not claim that a real-world action was completed "
+        "unless the application actually has the required "
+        "integration or tool."
     )
 
     payload = {
@@ -351,15 +515,45 @@ def grok_response(request, agent, api_key):
 
 
 # ==========================================================
-# SIDEBAR
+# SIDEBAR NAVIGATION
 # ==========================================================
 
 with st.sidebar:
 
     st.title("🤖 OMNI AI")
 
+    st.caption(
+        "Omni-Agentic Intelligent Automation System"
+    )
+
+    st.divider()
+
+    st.subheader("🧭 Agent Navigation")
+
+    navigation = [
+        "🏠 Home / Orchestrator",
+        "⏰ Daily Reminder Agent",
+        "❤️ Health & Wellness Agent",
+        "📅 Calendar & Schedule Agent",
+        "📚 Learning & Education Agent",
+        "📝 Productivity & Task Management Agent",
+        "💰 Finance & Expense Management Agent",
+        "🌐 Information & Communication Agent",
+        "🤖 Robotics Agent",
+        "🚁 Drones & Autonomous Systems Agent"
+    ]
+
+    selected_navigation = st.radio(
+        "Select Agent",
+        navigation
+    )
+
+    st.divider()
+
+    st.subheader("⚙️ Operating Mode")
+
     mode = st.radio(
-        "Operating Mode",
+        "Select Mode",
         [
             "🎮 Demo Mode",
             "🔑 Grok API Mode"
@@ -368,32 +562,12 @@ with st.sidebar:
 
     st.divider()
 
-    st.subheader("AI Agents")
+    st.subheader("📊 System")
 
-    for agent_name in AGENTS:
-        st.write(agent_name)
-
-    st.divider()
-
-    st.caption(
-        "Omni-Agentic Intelligent Automation System"
-    )
-
-
-# ==========================================================
-# MAIN
-# ==========================================================
-
-st.title("🤖 OMNI AI")
-
-st.subheader(
-    "Omni-Agentic Intelligent Automation System"
-)
-
-st.write(
-    "Centralized multi-agent AI assistant powered by "
-    "Streamlit, Python and Grok AI."
-)
+    st.write("Agents: **10**")
+    st.write("Database: **Not Required**")
+    st.write("Interface: **Streamlit**")
+    st.write("AI Engine: **Grok API**")
 
 
 # ==========================================================
@@ -404,11 +578,6 @@ api_key = ""
 
 if mode == "🔑 Grok API Mode":
 
-    st.info(
-        "🔑 Grok API Mode is active."
-    )
-
-    # Streamlit Cloud Secrets
     try:
 
         api_key = st.secrets["XAI_API_KEY"]
@@ -417,7 +586,6 @@ if mode == "🔑 Grok API Mode":
 
         api_key = ""
 
-    # Local fallback
     if not api_key:
 
         api_key = os.getenv(
@@ -425,69 +593,199 @@ if mode == "🔑 Grok API Mode":
             ""
         )
 
-    if api_key:
+
+# ==========================================================
+# HOME / ORCHESTRATOR PAGE
+# ==========================================================
+
+if selected_navigation == "🏠 Home / Orchestrator":
+
+    st.title("🤖 OMNI AI")
+
+    st.subheader(
+        "Omni-Agentic Intelligent Automation System"
+    )
+
+    st.write(
+        "A centralized multi-agent AI platform powered "
+        "by Streamlit, Python and Grok AI."
+    )
+
+    st.divider()
+
+    if mode == "🎮 Demo Mode":
 
         st.success(
-            "✅ Grok API key detected."
+            "🎮 Demo Mode Active — No API key required."
         )
 
     else:
 
-        st.warning(
-            "⚠️ XAI_API_KEY not found. "
-            "Add it in Streamlit Secrets."
-        )
+        if api_key:
+
+            st.success(
+                "🔑 Grok API Mode Active — API key detected."
+            )
+
+        else:
+
+            st.warning(
+                "⚠️ Grok API Mode selected, but "
+                "XAI_API_KEY was not found."
+            )
+
+    st.subheader("🧠 How OMNI AI Works")
+
+    st.markdown(
+        """
+        **User Request**
+
+        ↓
+
+        **Streamlit Interface**
+
+        ↓
+
+        **AI Orchestrator**
+
+        ↓
+
+        **Specialized Agent Selection**
+
+        ↓
+
+        **Grok AI Reasoning**
+
+        ↓
+
+        **Intelligent Response**
+        """
+    )
+
+    st.divider()
+
+    st.subheader("🚀 Available Agents")
+
+    col1, col2 = st.columns(2)
+
+    agent_items = list(AGENTS.items())
+
+    for index, item in enumerate(agent_items):
+
+        name = item[0]
+        description = item[1]
+
+        with col1 if index % 2 == 0 else col2:
+
+            st.info(
+                "**"
+                + name
+                + "**\n\n"
+                + description
+            )
+
+
+# ==========================================================
+# SPECIALIZED AGENT PAGE
+# ==========================================================
 
 else:
 
-    st.success(
-        "🎮 Demo Mode Active — "
-        "No API key required."
+    selected_agent = selected_navigation
+
+    st.title(selected_agent)
+
+    st.write(
+        AGENTS[selected_agent]
     )
 
+    st.divider()
 
-# ==========================================================
-# AGENT DASHBOARD
-# ==========================================================
+    if mode == "🎮 Demo Mode":
 
-st.divider()
-
-st.subheader("🚀 Available AI Agents")
-
-col1, col2 = st.columns(2)
-
-items = list(AGENTS.items())
-
-for index, item in enumerate(items):
-
-    name = item[0]
-    description = item[1]
-
-    with col1 if index % 2 == 0 else col2:
-
-        st.info(
-            "**"
-            + name
-            + "**\n\n"
-            + description
+        st.success(
+            "🎮 Demo Mode — This agent is ready for testing."
         )
+
+    else:
+
+        if api_key:
+
+            st.success(
+                "🔑 Grok API Mode — This agent is connected "
+                "to the Grok reasoning engine."
+            )
+
+        else:
+
+            st.warning(
+                "⚠️ Add XAI_API_KEY in Streamlit Secrets "
+                "to use Grok API Mode."
+            )
+
+    st.divider()
+
+    st.subheader("💡 Example Request")
+
+    examples = {
+
+        "⏰ Daily Reminder Agent":
+            "Create reminders for my important activities today.",
+
+        "❤️ Health & Wellness Agent":
+            "Create a simple daily wellness routine.",
+
+        "📅 Calendar & Schedule Agent":
+            "Create a productive schedule for tomorrow.",
+
+        "📚 Learning & Education Agent":
+            "Create a 30-day Python and AI learning plan.",
+
+        "📝 Productivity & Task Management Agent":
+            "Create a priority task list for today.",
+
+        "💰 Finance & Expense Management Agent":
+            "Organize my monthly expenses into categories.",
+
+        "🌐 Information & Communication Agent":
+            "Write an announcement for an AI workshop.",
+
+        "🤖 Robotics Agent":
+            "Design a Raspberry Pi object detection robot.",
+
+        "🚁 Drones & Autonomous Systems Agent":
+            "Design an autonomous drone inspection system."
+    }
+
+    st.code(
+        examples[selected_agent],
+        language="text"
+    )
 
 
 # ==========================================================
 # CHAT HISTORY
 # ==========================================================
 
-for message in st.session_state.messages:
+if st.session_state.messages:
 
-    with st.chat_message(message["role"]):
+    st.divider()
 
-        st.markdown(
-            message["content"]
-        )
+    st.subheader("💬 Conversation")
+
+    for message in st.session_state.messages:
+
+        with st.chat_message(
+            message["role"]
+        ):
+
+            st.markdown(
+                message["content"]
+            )
 
 
 # ==========================================================
-# USER REQUEST
+# CHAT INPUT
 # ==========================================================
 
 request = st.chat_input(
@@ -495,7 +793,15 @@ request = st.chat_input(
 )
 
 
+# ==========================================================
+# PROCESS REQUEST
+# ==========================================================
+
 if request:
+
+    # ------------------------------------------------------
+    # USER MESSAGE
+    # ------------------------------------------------------
 
     with st.chat_message("user"):
 
@@ -508,19 +814,20 @@ if request:
         }
     )
 
-    # Agent selection
+    # ------------------------------------------------------
+    # AUTOMATIC AGENT DETECTION
+    # ------------------------------------------------------
 
-    selected_agent = detect_agent(
-        request
+    detected_agent = detect_agent(request)
+
+    st.info(
+        "🧠 **AI Orchestrator selected:** "
+        + detected_agent
     )
 
-    st.success(
-        "🧠 AI Orchestrator selected: **"
-        + selected_agent
-        + "**"
-    )
-
-    # Generate response
+    # ------------------------------------------------------
+    # RESPONSE
+    # ------------------------------------------------------
 
     with st.chat_message("assistant"):
 
@@ -528,7 +835,7 @@ if request:
 
             response = demo_response(
                 request,
-                selected_agent
+                detected_agent
             )
 
             st.markdown(response)
@@ -538,9 +845,10 @@ if request:
             if not api_key:
 
                 response = (
-                    "⚠️ Grok API key is not configured.\n\n"
-                    "Please add **XAI_API_KEY** to "
-                    "Streamlit Secrets."
+                    "⚠️ **Grok API key is not configured.**\n\n"
+                    "Please add the following to Streamlit "
+                    "Secrets:\n\n"
+                    "`XAI_API_KEY = \"YOUR_GROK_API_KEY\"`"
                 )
 
                 st.warning(response)
@@ -555,7 +863,7 @@ if request:
 
                         response = grok_response(
                             request,
-                            selected_agent,
+                            detected_agent,
                             api_key
                         )
 
@@ -564,11 +872,15 @@ if request:
                 except Exception as error:
 
                     response = (
-                        "❌ Grok API request failed.\n\n"
+                        "❌ **Grok API request failed.**\n\n"
                         + str(error)
                     )
 
                     st.error(response)
+
+    # ------------------------------------------------------
+    # SAVE RESPONSE
+    # ------------------------------------------------------
 
     st.session_state.messages.append(
         {
@@ -585,6 +897,6 @@ if request:
 st.divider()
 
 st.caption(
-    "OMNI AI | Demo Mode + Grok API Mode | "
-    "10 Specialized AI Agents"
+    "OMNI AI | 10-Agent Architecture | "
+    "Demo Mode + Grok API Mode | Database-Free"
 )
