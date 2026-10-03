@@ -1,3 +1,4 @@
+````python
 import os
 import time as pytime
 from datetime import date, time, datetime
@@ -14,7 +15,6 @@ try:
     from streamlit_autorefresh import st_autorefresh
 
     AUTO_REFRESH_AVAILABLE = True
-
 except Exception:
     AUTO_REFRESH_AVAILABLE = False
 
@@ -38,7 +38,6 @@ st.set_page_config(
 def init_state():
 
     defaults = {
-
         "meetings": [],
         "reminders": [],
         "tasks": [],
@@ -48,28 +47,69 @@ def init_state():
         "communications": [],
         "robotics": [],
         "drones": [],
-
         "chat_history": [],
-        "chat_messages": [],
-
-        "fired_notifications": set(),
-
         "workflow_running": False,
-
+        "workflow_step": 0,
+        "fired_notifications": set(),
     }
 
     for key, value in defaults.items():
 
         if key not in st.session_state:
 
-            st.session_state[key] = value
+            if isinstance(value, list):
+                st.session_state[key] = []
+
+            elif isinstance(value, set):
+                st.session_state[key] = set()
+
+            else:
+                st.session_state[key] = value
 
 
 init_state()
 
 
 # ============================================================
-# SAFE DATA HELPERS
+# AGENTS
+# ============================================================
+
+AGENTS = {
+
+    "🧠 AI Orchestrator":
+        "Master agent that analyzes requests and communicates with specialist agents.",
+
+    "⏰ Daily Reminder Agent":
+        "Manages reminders, alarms, deadlines and routines.",
+
+    "❤️ Health & Wellness Agent":
+        "Manages wellness activities, exercise and appointments.",
+
+    "📅 Calendar & Schedule Agent":
+        "Manages meetings, classes, appointments and events.",
+
+    "📚 Learning & Education Agent":
+        "Manages courses, study plans, exams and learning activities.",
+
+    "📝 Productivity & Task Agent":
+        "Manages tasks, priorities and productivity workflows.",
+
+    "💰 Finance & Expense Agent":
+        "Manages expenses, budgets and payment reminders.",
+
+    "🌐 Information & Communication Agent":
+        "Creates emails, reports, announcements and messages.",
+
+    "🤖 Robotics Agent":
+        "Supports robotics, embedded systems, sensors, controllers and automation.",
+
+    "🚁 Drones & Autonomous Systems Agent":
+        "Supports UAVs, autonomous platforms, navigation and missions.",
+}
+
+
+# ============================================================
+# SAFE HELPERS
 # ============================================================
 
 def safe_value(item, key, default="Not specified"):
@@ -85,64 +125,33 @@ def safe_value(item, key, default="Not specified"):
     return value
 
 
-def safe_date(
-    item,
-    key="due_date",
-    default="Not set",
-):
+def safe_bool(item, key="notification", default=False):
 
-    return safe_value(
-        item,
-        key,
-        default,
-    )
+    try:
+        return bool(item.get(key, default))
+    except Exception:
+        return default
 
 
-def safe_time(
-    item,
-    key="due_time",
-    default="Not set",
-):
+def safe_date(item, key="due_date", default="Not set"):
 
-    return safe_value(
-        item,
-        key,
-        default,
-    )
+    return safe_value(item, key, default)
 
 
-def safe_bool(
-    item,
-    key="notification",
-    default=False,
-):
+def safe_time(item, key="due_time", default="Not set"):
 
-    value = safe_value(
-        item,
-        key,
-        default,
-    )
-
-    return bool(value)
+    return safe_value(item, key, default)
 
 
-def delete_item(
-    collection_name,
-    index,
-):
+def delete_item(collection_name, index):
 
-    items = st.session_state.get(
-        collection_name,
-        [],
-    )
+    items = st.session_state.get(collection_name, [])
 
     if 0 <= index < len(items):
 
         items.pop(index)
 
-        st.session_state[
-            collection_name
-        ] = items
+        st.session_state[collection_name] = items
 
     st.rerun()
 
@@ -165,8 +174,8 @@ with header_col1:
     )
 
     st.caption(
-        "Multi-Agent AI • Daily Automation • "
-        "Productivity • Robotics • Autonomous Systems"
+        "Multi-Agent AI • Intelligent Orchestration • "
+        "Daily Automation • Productivity • Robotics • Autonomous Systems"
     )
 
 
@@ -182,332 +191,7 @@ st.divider()
 
 
 # ============================================================
-# AGENTS
-# ============================================================
-
-AGENTS = {
-
-    "🧠 AI Orchestrator":
-        "Routes user requests to the appropriate specialist.",
-
-    "⏰ Daily Reminder Agent":
-        "Manages reminders, alarms, deadlines and routines.",
-
-    "❤️ Health & Wellness Agent":
-        "Manages wellness activities and appointments.",
-
-    "📅 Calendar & Schedule Agent":
-        "Manages meetings, classes, appointments and events.",
-
-    "📚 Learning & Education Agent":
-        "Creates study plans and learning activities.",
-
-    "📝 Productivity & Task Agent":
-        "Manages tasks, priorities and checklists.",
-
-    "💰 Finance & Expense Agent":
-        "Organizes expenses, budgets and payment reminders.",
-
-    "🌐 Information & Communication Agent":
-        "Creates emails, reports, announcements and messages.",
-
-    "🤖 Robotics Agent":
-        "Supports robotics, controllers, sensors and automation.",
-
-    "🚁 Drones & Autonomous Systems Agent":
-        "Supports UAVs, navigation and autonomous systems.",
-}
-
-
-# ============================================================
-# AGENT ALIASES
-# ============================================================
-
-AGENT_ALIASES = {
-
-    "orchestrator":
-        "🧠 AI Orchestrator",
-
-    "master":
-        "🧠 AI Orchestrator",
-
-    "ai":
-        "🧠 AI Orchestrator",
-
-    "reminder":
-        "⏰ Daily Reminder Agent",
-
-    "reminders":
-        "⏰ Daily Reminder Agent",
-
-    "alarm":
-        "⏰ Daily Reminder Agent",
-
-    "health":
-        "❤️ Health & Wellness Agent",
-
-    "wellness":
-        "❤️ Health & Wellness Agent",
-
-    "fitness":
-        "❤️ Health & Wellness Agent",
-
-    "calendar":
-        "📅 Calendar & Schedule Agent",
-
-    "schedule":
-        "📅 Calendar & Schedule Agent",
-
-    "meeting":
-        "📅 Calendar & Schedule Agent",
-
-    "meetings":
-        "📅 Calendar & Schedule Agent",
-
-    "learning":
-        "📚 Learning & Education Agent",
-
-    "education":
-        "📚 Learning & Education Agent",
-
-    "study":
-        "📚 Learning & Education Agent",
-
-    "task":
-        "📝 Productivity & Task Agent",
-
-    "tasks":
-        "📝 Productivity & Task Agent",
-
-    "productivity":
-        "📝 Productivity & Task Agent",
-
-    "finance":
-        "💰 Finance & Expense Agent",
-
-    "expense":
-        "💰 Finance & Expense Agent",
-
-    "expenses":
-        "💰 Finance & Expense Agent",
-
-    "communication":
-        "🌐 Information & Communication Agent",
-
-    "communications":
-        "🌐 Information & Communication Agent",
-
-    "email":
-        "🌐 Information & Communication Agent",
-
-    "message":
-        "🌐 Information & Communication Agent",
-
-    "robotics":
-        "🤖 Robotics Agent",
-
-    "robot":
-        "🤖 Robotics Agent",
-
-    "arduino":
-        "🤖 Robotics Agent",
-
-    "esp32":
-        "🤖 Robotics Agent",
-
-    "raspberry":
-        "🤖 Robotics Agent",
-
-    "drone":
-        "🚁 Drones & Autonomous Systems Agent",
-
-    "drones":
-        "🚁 Drones & Autonomous Systems Agent",
-
-    "uav":
-        "🚁 Drones & Autonomous Systems Agent",
-
-    "autonomous":
-        "🚁 Drones & Autonomous Systems Agent",
-
-}
-
-
-# ============================================================
-# EXPLICIT AGENT DETECTION
-# ============================================================
-
-def detect_explicit_agent(request):
-
-    if not request:
-        return None
-
-    text = request.lower().strip()
-
-    for alias, agent in AGENT_ALIASES.items():
-
-        if (
-            f"@{alias}" in text
-            or text.startswith(alias + " ")
-            or text.startswith(alias + ":")
-        ):
-
-            return agent
-
-    return None
-
-
-# ============================================================
-# AGENT DETECTION
-# ============================================================
-
-def detect_agent(request):
-
-    explicit_agent = detect_explicit_agent(
-        request
-    )
-
-    if explicit_agent:
-
-        return explicit_agent
-
-    text = request.lower()
-
-    rules = [
-
-        (
-            [
-                "reminder",
-                "alarm",
-                "remind",
-                "deadline",
-            ],
-            "⏰ Daily Reminder Agent",
-        ),
-
-        (
-            [
-                "health",
-                "wellness",
-                "fitness",
-                "exercise",
-                "workout",
-                "hydration",
-                "meditation",
-            ],
-            "❤️ Health & Wellness Agent",
-        ),
-
-        (
-            [
-                "calendar",
-                "meeting",
-                "meet",
-                "schedule",
-                "appointment",
-                "event",
-                "class",
-            ],
-            "📅 Calendar & Schedule Agent",
-        ),
-
-        (
-            [
-                "learn",
-                "learning",
-                "study",
-                "education",
-                "course",
-                "python",
-                "exam",
-            ],
-            "📚 Learning & Education Agent",
-        ),
-
-        (
-            [
-                "task",
-                "todo",
-                "to-do",
-                "productivity",
-                "checklist",
-            ],
-            "📝 Productivity & Task Agent",
-        ),
-
-        (
-            [
-                "expense",
-                "finance",
-                "budget",
-                "money",
-                "payment",
-                "spending",
-                "bill",
-            ],
-            "💰 Finance & Expense Agent",
-        ),
-
-        (
-            [
-                "email",
-                "message",
-                "announcement",
-                "report",
-                "letter",
-                "notice",
-            ],
-            "🌐 Information & Communication Agent",
-        ),
-
-        (
-            [
-                "robot",
-                "robotics",
-                "arduino",
-                "esp32",
-                "esp8266",
-                "raspberry",
-                "sensor",
-                "motor",
-                "embedded",
-                "plc",
-            ],
-            "🤖 Robotics Agent",
-        ),
-
-        (
-            [
-                "drone",
-                "drones",
-                "uav",
-                "autonomous",
-                "navigation",
-                "quadcopter",
-                "flight",
-                "pixhawk",
-                "ardupilot",
-                "px4",
-            ],
-            "🚁 Drones & Autonomous Systems Agent",
-        ),
-
-    ]
-
-    for keywords, agent in rules:
-
-        if any(
-            word in text
-            for word in keywords
-        ):
-
-            return agent
-
-    return "🧠 AI Orchestrator"
-
-
-# ============================================================
-# NOTIFICATION SYSTEM
+# NOTIFICATION ENGINE
 # ============================================================
 
 def notification_id(
@@ -518,10 +202,8 @@ def notification_id(
 ):
 
     return (
-        f"{category}|"
-        f"{title}|"
-        f"{due_date}|"
-        f"{due_time}"
+        f"{category}|{title}|"
+        f"{due_date}|{due_time}"
     )
 
 
@@ -537,24 +219,14 @@ def browser_notification(message):
     st.components.v1.html(
         f"""
         <script>
-
         try {{
-
             if ("Notification" in window) {{
 
-                if (
-                    Notification.permission
-                    === "default"
-                ) {{
-
+                if (Notification.permission === "default") {{
                     Notification.requestPermission();
-
                 }}
 
-                if (
-                    Notification.permission
-                    === "granted"
-                ) {{
+                if (Notification.permission === "granted") {{
 
                     new Notification(
                         "🤖 OMNI AI Reminder",
@@ -564,11 +236,8 @@ def browser_notification(message):
                     );
 
                 }}
-
             }}
-
         }} catch (e) {{}}
-
         </script>
         """,
         height=0,
@@ -606,17 +275,16 @@ def check_items(
         ):
             continue
 
-        item_date = safe_value(
-            item,
-            date_key,
-            None,
+        item_date = item.get(
+            date_key
         )
 
-        item_time = safe_value(
-            item,
-            time_key,
-            None,
+        item_time = item.get(
+            time_key
         )
+
+        if item_date is None or item_time is None:
+            continue
 
         title = str(
             safe_value(
@@ -625,12 +293,6 @@ def check_items(
                 category,
             )
         )
-
-        if (
-            item_date is None
-            or item_time is None
-        ):
-            continue
 
         try:
 
@@ -648,20 +310,18 @@ def check_items(
 
                 if (
                     nid
-                    not in st.session_state
-                    .fired_notifications
+                    not in st.session_state.fired_notifications
                 ):
 
-                    st.session_state \
-                        .fired_notifications \
-                        .add(nid)
+                    st.session_state.fired_notifications.add(
+                        nid
+                    )
 
                     notifications.append(
                         f"{icon} {title} is due now."
                     )
 
         except Exception:
-
             continue
 
 
@@ -766,9 +426,7 @@ def run_notification_engine():
             icon="🔔",
         )
 
-        browser_notification(
-            message
-        )
+        browser_notification(message)
 
     if notifications:
 
@@ -780,10 +438,6 @@ def run_notification_engine():
             )
         )
 
-
-# ============================================================
-# AUTO REFRESH
-# ============================================================
 
 if AUTO_REFRESH_AVAILABLE:
 
@@ -810,11 +464,9 @@ def get_api_key():
         )
 
         if secret_key:
-
             return secret_key
 
     except Exception:
-
         pass
 
     return os.getenv(
@@ -827,6 +479,7 @@ def call_grok(
     request,
     agent,
     api_key,
+    conversation=None,
 ):
 
     url = (
@@ -834,57 +487,69 @@ def call_grok(
     )
 
     headers = {
-
         "Authorization":
             f"Bearer {api_key}",
 
         "Content-Type":
             "application/json",
-
     }
+
+    messages = [
+
+        {
+            "role": "system",
+
+            "content": (
+                "You are OMNI AI, a centralized "
+                "multi-agent intelligent automation "
+                "system. You coordinate specialist "
+                "agents including reminders, calendar, "
+                "learning, productivity, wellness, "
+                "finance, communication, robotics and "
+                "drones. The selected specialist agent "
+                f"is {agent}. "
+                "Explain which agent should handle the "
+                "request and provide a practical "
+                "structured response."
+            ),
+        }
+
+    ]
+
+    if conversation:
+
+        for item in conversation[-10:]:
+
+            if (
+                isinstance(item, dict)
+                and "role" in item
+                and "content" in item
+            ):
+
+                messages.append(
+                    {
+                        "role": item["role"],
+                        "content": item["content"],
+                    }
+                )
+
+    messages.append(
+        {
+            "role": "user",
+            "content": request,
+        }
+    )
 
     payload = {
 
         "model":
             "grok-3-mini",
 
-        "messages": [
-
-            {
-                "role":
-                    "system",
-
-                "content": (
-                    "You are OMNI AI, a "
-                    "multi-agent intelligent "
-                    "assistant. "
-                    "The selected specialist "
-                    "is "
-                    f"{agent}. "
-                    "Provide practical, "
-                    "structured, safe and "
-                    "useful responses. "
-                    "Explain actions clearly. "
-                    "If the request belongs "
-                    "to another specialist, "
-                    "mention the appropriate "
-                    "agent."
-                ),
-            },
-
-            {
-                "role":
-                    "user",
-
-                "content":
-                    request,
-            },
-
-        ],
+        "messages":
+            messages,
 
         "temperature":
             0.3,
-
     }
 
     response = requests.post(
@@ -897,7 +562,7 @@ def call_grok(
     if response.status_code != 200:
 
         raise RuntimeError(
-            f"Grok API Error "
+            "Grok API Error "
             f"{response.status_code}: "
             f"{response.text}"
         )
@@ -907,13 +572,8 @@ def call_grok(
     try:
 
         return (
-            data[
-                "choices"
-            ][0][
-                "message"
-            ][
-                "content"
-            ]
+            data["choices"][0]
+            ["message"]["content"]
         )
 
     except (
@@ -929,7 +589,142 @@ def call_grok(
 
 
 # ============================================================
-# DEMO RESPONSE
+# AGENT DETECTION
+# ============================================================
+
+def detect_agent(request):
+
+    text = request.lower()
+
+    rules = [
+
+        (
+            [
+                "reminder",
+                "alarm",
+                "remind",
+                "deadline",
+            ],
+            "⏰ Daily Reminder Agent",
+        ),
+
+        (
+            [
+                "health",
+                "wellness",
+                "fitness",
+                "exercise",
+                "workout",
+                "meditation",
+            ],
+            "❤️ Health & Wellness Agent",
+        ),
+
+        (
+            [
+                "calendar",
+                "meeting",
+                "schedule",
+                "appointment",
+                "event",
+                "class",
+            ],
+            "📅 Calendar & Schedule Agent",
+        ),
+
+        (
+            [
+                "learn",
+                "learning",
+                "study",
+                "education",
+                "course",
+                "python",
+                "exam",
+            ],
+            "📚 Learning & Education Agent",
+        ),
+
+        (
+            [
+                "task",
+                "todo",
+                "to-do",
+                "productivity",
+                "checklist",
+            ],
+            "📝 Productivity & Task Agent",
+        ),
+
+        (
+            [
+                "expense",
+                "finance",
+                "budget",
+                "money",
+                "payment",
+                "spending",
+            ],
+            "💰 Finance & Expense Agent",
+        ),
+
+        (
+            [
+                "email",
+                "message",
+                "announcement",
+                "report",
+                "letter",
+                "communication",
+            ],
+            "🌐 Information & Communication Agent",
+        ),
+
+        (
+            [
+                "robot",
+                "robotics",
+                "arduino",
+                "esp32",
+                "esp8266",
+                "raspberry",
+                "sensor",
+                "motor",
+                "embedded",
+                "plc",
+            ],
+            "🤖 Robotics Agent",
+        ),
+
+        (
+            [
+                "drone",
+                "uav",
+                "autonomous",
+                "navigation",
+                "quadcopter",
+                "flight",
+                "pixhawk",
+                "ardupilot",
+            ],
+            "🚁 Drones & Autonomous Systems Agent",
+        ),
+    ]
+
+    for keywords, agent in rules:
+
+        if any(
+            word in text
+            for word in keywords
+        ):
+
+            return agent
+
+    return "🧠 AI Orchestrator"
+
+
+# ============================================================
+# DEMO AGENT RESPONSE
 # ============================================================
 
 def demo_response(
@@ -937,363 +732,2001 @@ def demo_response(
     agent,
 ):
 
-    descriptions = {
-
-        "⏰ Daily Reminder Agent":
-            "Demo reminder/alarm workflow selected.",
-
-        "❤️ Health & Wellness Agent":
-            "Demo wellness workflow selected.",
-
-        "📅 Calendar & Schedule Agent":
-            "Demo calendar workflow selected.",
-
-        "📚 Learning & Education Agent":
-            "Demo learning workflow selected.",
-
-        "📝 Productivity & Task Agent":
-            "Demo productivity workflow selected.",
-
-        "💰 Finance & Expense Agent":
-            "Demo finance workflow selected.",
-
-        "🌐 Information & Communication Agent":
-            "Demo communication workflow selected.",
-
-        "🤖 Robotics Agent":
-            "Demo robotics workflow selected.",
-
-        "🚁 Drones & Autonomous Systems Agent":
-            "Demo autonomous-system workflow selected.",
-
-        "🧠 AI Orchestrator":
-            "Demo orchestration workflow selected.",
-    }
+    description = AGENTS.get(
+        agent,
+        "Specialist agent selected.",
+    )
 
     return f"""
 ## {agent}
 
-**Request:**
+### Request Received
 
-{request}
+> {request}
 
-### Demo Processing
+### AI Processing
 
-1. Request received
-2. Intent analyzed
-3. Specialist agent selected
-4. Agent workflow executed
-5. Structured response generated
+**Agent Role**
+
+{description}
+
+### Processing Steps
+
+1. User request received.
+2. AI Orchestrator analyzed the request.
+3. Intent was identified.
+4. Appropriate specialist agent was selected.
+5. Specialist agent processed the request.
+6. Response was returned to the Orchestrator.
+7. OMNI AI generated the final response.
 
 ### Demo Result
 
-{descriptions.get(
-    agent,
-    "Demo workflow completed."
-)}
+🟢 **{agent} is active and ready.**
 
-🟢 **Agent Status: Active**
+This is a demonstration response.  
+Switch to **Grok API Mode** to obtain an AI-generated response.
 """
 
 
 # ============================================================
-# AGENT COMMUNICATION ENGINE
+# MULTI-AGENT WORKFLOW
 # ============================================================
 
-def agent_communication(
-    request,
-    selected_agent,
-):
+def get_workflow_agents():
 
     return [
 
-        {
-            "agent":
-                "🧠 AI Orchestrator",
+        (
+            "🧑 User",
+            "Request submitted to OMNI AI",
+        ),
 
-            "message":
-                "Request received. "
-                "Analyzing user intent.",
+        (
+            "🧠 AI Orchestrator",
+            "Analyzes intent and selects specialist agent",
+        ),
 
-            "status":
-                "completed",
-        },
+        (
+            "🔎 Intent Analyzer",
+            "Understands task, context and required action",
+        ),
 
-        {
-            "agent":
-                "🧠 AI Orchestrator",
+        (
+            "🤖 Specialist Agent",
+            "Executes the appropriate domain workflow",
+        ),
 
-            "message":
-                f"Intent matched to "
-                f"{selected_agent}.",
+        (
+            "🔄 AI Orchestrator",
+            "Receives specialist-agent result",
+        ),
 
-            "status":
-                "completed",
-        },
+        (
+            "📤 Response Manager",
+            "Formats and returns final response",
+        ),
 
-        {
-            "agent":
-                selected_agent,
-
-            "message":
-                "Specialist agent activated "
-                "and request received.",
-
-            "status":
-                "completed",
-        },
-
-        {
-            "agent":
-                selected_agent,
-
-            "message":
-                "Specialist agent is analyzing "
-                "the task and preparing an action.",
-
-            "status":
-                "completed",
-        },
-
-        {
-            "agent":
-                selected_agent,
-
-            "message":
-                "Specialist result generated "
-                "and sent back to Orchestrator.",
-
-            "status":
-                "completed",
-        },
-
-        {
-            "agent":
-                "🧠 AI Orchestrator",
-
-            "message":
-                "Orchestrator validated the "
-                "specialist response.",
-
-            "status":
-                "completed",
-        },
-
-        {
-            "agent":
-                "👤 User",
-
-            "message":
-                "Final response delivered.",
-
-            "status":
-                "completed",
-        },
-
+        (
+            "🧑 User",
+            "Receives completed response",
+        ),
     ]
 
 
-# ============================================================
-# PLAY AGENTIC WORKFLOW
-# ============================================================
+def play_demo_workflow():
 
-def show_agent_workflow(
-    request,
-    selected_agent,
-):
+    st.session_state.workflow_running = True
+    st.session_state.workflow_step = 0
 
     st.subheader(
-        "🔄 Live Agentic Workflow"
+        "▶️ Live Agent-to-Agent Demonstration"
     )
 
-    st.caption(
-        "This demonstration shows how the "
-        "AI Orchestrator communicates with "
-        "a specialist agent."
-    )
-
-    workflow = agent_communication(
-        request,
-        selected_agent,
-    )
+    workflow = get_workflow_agents()
 
     progress = st.progress(0)
 
-    status_placeholder = st.empty()
+    status = st.empty()
 
-    for index, step in enumerate(
-        workflow
-    ):
+    details = st.empty()
 
-        percentage = int(
-            (
-                (index + 1)
-                / len(workflow)
-            )
-            * 100
-        )
+    for index, (agent, message) in enumerate(workflow):
+
+        st.session_state.workflow_step = index + 1
 
         progress.progress(
-            percentage
+            int(
+                ((index + 1) / len(workflow))
+                * 100
+            )
         )
 
-        status_placeholder.info(
-            f"⚙️ Processing Stage "
-            f"{index + 1}/"
-            f"{len(workflow)}"
+        status.info(
+            f"🔄 Step {index + 1}/{len(workflow)} — "
+            f"{agent}"
         )
 
-        if index == 0:
-
-            icon = "🧠"
-
-        elif index == 1:
-
-            icon = "📡"
-
-        elif index == 2:
-
-            icon = "🤖"
-
-        elif index == 3:
-
-            icon = "⚙️"
-
-        elif index == 4:
-
-            icon = "📤"
-
-        elif index == 5:
-
-            icon = "🧠"
-
-        else:
-
-            icon = "👤"
-
-        st.info(
-            f"{icon} **{step['agent']}**\n\n"
-            f"{step['message']}"
+        details.write(
+            f"**{agent}**\n\n"
+            f"{message}"
         )
 
-        pytime.sleep(0.6)
+        pytime.sleep(0.8)
 
-    status_placeholder.success(
-        "✅ Agentic workflow completed."
-    )
+    st.session_state.workflow_running = False
 
     st.success(
-        "🟢 Orchestrator successfully "
-        "communicated with the specialist agent."
+        "✅ Multi-agent workflow completed successfully."
     )
 
-
-# ============================================================
-# CHATBOT DEMO RESPONSE
-# ============================================================
-
-def chatbot_demo_response(
-    request,
-    agent,
-):
-
-    responses = {
-
-        "🧠 AI Orchestrator":
-            (
-                "I analyzed your request and "
-                "routed it to the appropriate "
-                "specialist agent."
-            ),
-
-        "⏰ Daily Reminder Agent":
-            (
-                "I can manage reminders, "
-                "alarms, deadlines and "
-                "recurring routines."
-            ),
-
-        "❤️ Health & Wellness Agent":
-            (
-                "I can organize wellness "
-                "activities, exercise, "
-                "hydration and appointments."
-            ),
-
-        "📅 Calendar & Schedule Agent":
-            (
-                "I can manage meetings, "
-                "appointments, classes "
-                "and scheduled events."
-            ),
-
-        "📚 Learning & Education Agent":
-            (
-                "I can create study plans, "
-                "learning activities and "
-                "educational schedules."
-            ),
-
-        "📝 Productivity & Task Agent":
-            (
-                "I can organize tasks, "
-                "priorities, deadlines "
-                "and checklists."
-            ),
-
-        "💰 Finance & Expense Agent":
-            (
-                "I can organize expenses, "
-                "payment schedules, "
-                "categories and reminders."
-            ),
-
-        "🌐 Information & Communication Agent":
-            (
-                "I can prepare emails, "
-                "announcements, reports, "
-                "notices and messages."
-            ),
-
-        "🤖 Robotics Agent":
-            (
-                "I can assist with Arduino, "
-                "ESP32, Raspberry Pi, sensors, "
-                "motors and robotics projects."
-            ),
-
-        "🚁 Drones & Autonomous Systems Agent":
-            (
-                "I can assist with UAVs, "
-                "autonomous platforms, "
-                "navigation and mission planning."
-            ),
-    }
-
-    return f"""
-## 🤖 {agent}
-
-**Your Request**
-
-> {request}
-
-### Specialist Response
-
-{responses.get(
-    agent,
-    "The specialist agent has processed "
-    "your request."
-)}
-
-### Agentic Routing
+    st.markdown(
+        """
+### 🔗 Communication Flow
 
 ```text
 User
   ↓
-🧠 AI Orchestrator
+AI Orchestrator
   ↓
-{agent}
+Intent Analyzer
   ↓
-Specialist Processing
+Specialist Agent
   ↓
-Response
+Specialist Result
+  ↓
+AI Orchestrator
+  ↓
+Response Manager
+  ↓
+User
+````
+
+"""
+)
+
+# ============================================================
+
+# SIDEBAR
+
+# ============================================================
+
+with st.sidebar:
+
+```
+st.title("🤖 OMNI AI")
+
+st.caption(
+    "Agent Navigation"
+)
+
+page = st.radio(
+    "Select Module",
+    [
+        "🏠 Dashboard",
+        "🧠 AI Orchestrator",
+        "⏰ Reminders & Alarms",
+        "📅 Calendar & Meetings",
+        "📚 Learning",
+        "📝 Tasks & Productivity",
+        "❤️ Wellness",
+        "💰 Finance",
+        "🌐 Communication",
+        "🤖 Robotics",
+        "🚁 Drones & Autonomous",
+    ],
+)
+
+st.divider()
+
+mode = st.radio(
+    "Operating Mode",
+    [
+        "🎮 Demo Mode",
+        "🔑 Grok API Mode",
+    ],
+)
+
+api_key = get_api_key()
+
+if mode == "🔑 Grok API Mode":
+
+    if api_key:
+
+        st.success(
+            "🔑 XAI_API_KEY detected."
+        )
+
+    else:
+
+        st.warning(
+            "XAI_API_KEY is not configured."
+        )
+
+st.divider()
+
+st.subheader(
+    "📊 Data"
+)
+
+counts = [
+
+    ("Meetings", "meetings"),
+    ("Reminders", "reminders"),
+    ("Tasks", "tasks"),
+    ("Learning", "learning"),
+    ("Wellness", "wellness"),
+    ("Expenses", "expenses"),
+    ("Communications", "communications"),
+    ("Robotics", "robotics"),
+    ("Drones", "drones"),
+]
+
+for label, key in counts:
+
+    st.write(
+        f"{label}: "
+        f"**{len(st.session_state[key])}**"
+    )
+
+st.divider()
+
+if st.button(
+    "🗑️ Clear All Demo Data",
+    use_container_width=True,
+):
+
+    for key in [
+
+        "meetings",
+        "reminders",
+        "tasks",
+        "learning",
+        "wellness",
+        "expenses",
+        "communications",
+        "robotics",
+        "drones",
+    ]:
+
+        st.session_state[key] = []
+
+    st.session_state.fired_notifications = set()
+
+    st.rerun()
+```
+
+# ============================================================
+
+# DASHBOARD
+
+# ============================================================
+
+if page == "🏠 Dashboard":
+
+```
+st.header(
+    "📊 OMNI AI Dashboard"
+)
+
+st.write(
+    "Centralized multi-agent AI assistant "
+    "with Demo Mode and Grok API Mode."
+)
+
+cols = st.columns(5)
+
+cols[0].metric(
+    "📅 Meetings",
+    len(st.session_state.meetings),
+)
+
+cols[1].metric(
+    "⏰ Reminders",
+    len(st.session_state.reminders),
+)
+
+cols[2].metric(
+    "📝 Tasks",
+    len(st.session_state.tasks),
+)
+
+cols[3].metric(
+    "❤️ Wellness",
+    len(st.session_state.wellness),
+)
+
+cols[4].metric(
+    "🤖 Robotics",
+    len(st.session_state.robotics),
+)
+
+st.divider()
+
+st.subheader(
+    "🚀 Multi-Agent Demo"
+)
+
+st.write(
+    "Press the button below to watch "
+    "the OMNI AI Orchestrator communicate "
+    "with specialist agents."
+)
+
+if st.button(
+    "▶️ PLAY MULTI-AGENT WORKFLOW",
+    use_container_width=True,
+    type="primary",
+):
+
+    play_demo_workflow()
+
+st.divider()
+
+st.subheader(
+    "🔄 Architecture"
+)
+
+st.code(
+    """User Request
+  ↓
+```
+
+Streamlit UI
+↓
+AI Orchestrator
+↓
+Intent Analyzer
+↓
+Specialist Agent
+↓
+Agent Processing
+↓
+AI Orchestrator
+↓
+Response Manager
+↓
+User""",
+language="text",
+)
+
+```
+st.subheader(
+    "🤖 AI Agents"
+)
+
+for name, description in AGENTS.items():
+
+    st.info(
+        f"**{name}** — {description}"
+    )
+```
+
+# ============================================================
+
+# AI ORCHESTRATOR
+
+# ============================================================
+
+elif page == "🧠 AI Orchestrator":
+
+```
+st.header(
+    "🧠 AI Orchestrator / Master Agent"
+)
+
+st.write(
+    "The Orchestrator is the central intelligence "
+    "layer of OMNI AI. It identifies the user's "
+    "intent and communicates with specialist agents."
+)
+
+st.divider()
+
+st.subheader(
+    "▶️ Agent Communication Demo"
+)
+
+if st.button(
+    "▶️ PLAY ORCHESTRATOR WORKFLOW",
+    use_container_width=True,
+    type="primary",
+):
+
+    play_demo_workflow()
+
+st.divider()
+
+st.subheader(
+    "💬 OMNI AI Agent Chatbot"
+)
+
+selected_agent = st.selectbox(
+    "Select Agent",
+    list(AGENTS.keys()),
+)
+
+request = st.text_area(
+    "💬 Ask OMNI AI",
+    placeholder=(
+        "Example: Create a study plan for "
+        "Python and remind me tomorrow at 6 PM."
+    ),
+    height=140,
+)
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    process_button = st.button(
+        "🚀 Process Request",
+        use_container_width=True,
+        type="primary",
+    )
+
+with col2:
+
+    clear_chat = st.button(
+        "🧹 Clear Chat",
+        use_container_width=True,
+    )
+
+if clear_chat:
+
+    st.session_state.chat_history = []
+
+    st.rerun()
+
+if process_button:
+
+    if not request.strip():
+
+        st.warning(
+            "Please enter a request."
+        )
+
+    else:
+
+        detected_agent = detect_agent(
+            request
+        )
+
+        if selected_agent != "🧠 AI Orchestrator":
+
+            agent = selected_agent
+
+        else:
+
+            agent = detected_agent
+
+        st.success(
+            f"🤖 Selected Agent: **{agent}**"
+        )
+
+        st.info(
+            f"🧠 Orchestrator → {agent}"
+        )
+
+        if mode == "🎮 Demo Mode":
+
+            result = demo_response(
+                request,
+                agent,
+            )
+
+        else:
+
+            if not api_key:
+
+                st.error(
+                    "Add XAI_API_KEY to "
+                    "Streamlit Secrets."
+                )
+
+                result = None
+
+            else:
+
+                try:
+
+                    with st.spinner(
+                        "🤖 Grok is processing..."
+                    ):
+
+                        result = call_grok(
+                            request,
+                            agent,
+                            api_key,
+                            st.session_state.chat_history,
+                        )
+
+                except Exception as exc:
+
+                    result = None
+
+                    st.error(
+                        f"Grok API Error: {exc}"
+                    )
+
+        if result:
+
+            st.session_state.chat_history.append(
+                {
+                    "role": "user",
+                    "content": request,
+                }
+            )
+
+            st.session_state.chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": result,
+                }
+            )
+
+            st.markdown(
+                "### 🤖 Agent Response"
+            )
+
+            st.markdown(result)
+
+if st.session_state.chat_history:
+
+    st.divider()
+
+    st.subheader(
+        "💬 Conversation History"
+    )
+
+    for message in st.session_state.chat_history:
+
+        if message["role"] == "user":
+
+            st.markdown(
+                f"**🧑 User:** {message['content']}"
+            )
+
+        else:
+
+            st.markdown(
+                f"**🤖 OMNI AI:** {message['content']}"
+            )
+```
+
+# ============================================================
+
+# REMINDERS
+
+# ============================================================
+
+elif page == "⏰ Reminders & Alarms":
+
+```
+st.header(
+    "⏰ Daily Reminder Agent"
+)
+
+with st.form("reminder_form"):
+
+    title = st.text_input(
+        "Reminder / Alarm Title"
+    )
+
+    c1, c2 = st.columns(2)
+
+    due_date = c1.date_input(
+        "📅 Due Date",
+        value=date.today(),
+    )
+
+    due_time = c2.time_input(
+        "⏰ Alarm Time",
+        value=time(9, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Enable Alarm / Notification",
+        value=True,
+    )
+
+    repeat = st.selectbox(
+        "🔁 Repeat",
+        [
+            "Once",
+            "Daily",
+            "Weekly",
+            "Weekdays",
+            "Monthly",
+        ],
+    )
+
+    priority = st.selectbox(
+        "⚡ Priority",
+        [
+            "High",
+            "Medium",
+            "Low",
+        ],
+    )
+
+    notes = st.text_area(
+        "📝 Notes"
+    )
+
+    submit = st.form_submit_button(
+        "➕ Schedule Alarm"
+    )
+
+    if submit:
+
+        if title.strip():
+
+            st.session_state.reminders.append(
+                {
+                    "title":
+                        title.strip(),
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+
+                    "repeat":
+                        repeat,
+
+                    "priority":
+                        priority,
+
+                    "notes":
+                        notes,
+                }
+            )
+
+            st.success(
+                "✅ Alarm scheduled."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a reminder title."
+            )
+
+st.divider()
+
+if not st.session_state.reminders:
+
+    st.info(
+        "No reminders scheduled."
+    )
+
+for i, item in enumerate(
+    st.session_state.reminders
+):
+
+    st.info(
+        f"⏰ **{safe_value(item, 'title')}**\n\n"
+        f"📅 {safe_date(item)} | "
+        f"🕐 {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}\n\n"
+        f"🔁 {safe_value(item, 'repeat')} | "
+        f"⚡ {safe_value(item, 'priority')}\n\n"
+        f"📝 {safe_value(item, 'notes', '')}"
+    )
+
+    if st.button(
+        "🗑️ Delete Reminder",
+        key=f"rem_delete_{i}",
+    ):
+
+        delete_item(
+            "reminders",
+            i,
+        )
+```
+
+# ============================================================
+
+# CALENDAR
+
+# ============================================================
+
+elif page == "📅 Calendar & Meetings":
+
+```
+st.header(
+    "📅 Calendar & Schedule Agent"
+)
+
+with st.form("meeting_form"):
+
+    title = st.text_input(
+        "Meeting / Event Title"
+    )
+
+    c1, c2 = st.columns(2)
+
+    meeting_date = c1.date_input(
+        "📅 Date",
+        value=date.today(),
+    )
+
+    meeting_time = c2.time_input(
+        "⏰ Time",
+        value=time(10, 0),
+    )
+
+    duration = st.number_input(
+        "Duration (minutes)",
+        min_value=15,
+        max_value=480,
+        value=60,
+        step=15,
+    )
+
+    location = st.text_input(
+        "📍 Location / Platform"
+    )
+
+    participants = st.text_input(
+        "👥 Participants"
+    )
+
+    event_type = st.selectbox(
+        "🏷️ Event Type",
+        [
+            "Meeting",
+            "Class",
+            "Appointment",
+            "Event",
+            "Project Review",
+        ],
+    )
+
+    notification = st.checkbox(
+        "🔔 Meeting Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add to Calendar"
+    )
+
+    if submit:
+
+        if title.strip():
+
+            st.session_state.meetings.append(
+                {
+                    "title":
+                        title.strip(),
+
+                    "date":
+                        meeting_date,
+
+                    "time":
+                        meeting_time,
+
+                    "duration":
+                        duration,
+
+                    "location":
+                        location,
+
+                    "participants":
+                        participants,
+
+                    "type":
+                        event_type,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Meeting added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a meeting title."
+            )
+
+st.divider()
+
+if not st.session_state.meetings:
+
+    st.info(
+        "No meetings scheduled."
+    )
+
+for i, item in enumerate(
+    st.session_state.meetings
+):
+
+    st.info(
+        f"📅 **{safe_value(item, 'title')}**\n\n"
+        f"📅 {safe_value(item, 'date')} | "
+        f"⏰ {safe_value(item, 'time')}\n\n"
+        f"⏱️ {safe_value(item, 'duration')} minutes | "
+        f"📍 {safe_value(item, 'location', '')}\n\n"
+        f"👥 {safe_value(item, 'participants', '')} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Meeting",
+        key=f"meeting_delete_{i}",
+    ):
+
+        delete_item(
+            "meetings",
+            i,
+        )
+```
+
+# ============================================================
+
+# LEARNING
+
+# ============================================================
+
+elif page == "📚 Learning":
+
+```
+st.header(
+    "📚 Learning & Education Agent"
+)
+
+with st.form("learning_form"):
+
+    subject = st.text_input(
+        "📚 Subject / Course"
+    )
+
+    goal = st.text_area(
+        "🎯 Learning Goal"
+    )
+
+    c1, c2 = st.columns(2)
+
+    due_date = c1.date_input(
+        "📅 Study Date",
+        value=date.today(),
+    )
+
+    due_time = c2.time_input(
+        "⏰ Study Time",
+        value=time(18, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Study Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add Learning Activity"
+    )
+
+    if submit:
+
+        if subject.strip():
+
+            st.session_state.learning.append(
+                {
+                    "subject":
+                        subject.strip(),
+
+                    "goal":
+                        goal,
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Learning activity added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a subject."
+            )
+
+st.divider()
+
+if not st.session_state.learning:
+
+    st.info(
+        "No learning activities added."
+    )
+
+for i, item in enumerate(
+    st.session_state.learning
+):
+
+    st.info(
+        f"📚 **{safe_value(item, 'subject')}**\n\n"
+        f"🎯 {safe_value(item, 'goal', '')}\n\n"
+        f"📅 {safe_date(item)} | "
+        f"⏰ {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Learning Activity",
+        key=f"learning_delete_{i}",
+    ):
+
+        delete_item(
+            "learning",
+            i,
+        )
+```
+
+# ============================================================
+
+# TASKS
+
+# ============================================================
+
+elif page == "📝 Tasks & Productivity":
+
+```
+st.header(
+    "📝 Productivity & Task Management Agent"
+)
+
+with st.form("task_form"):
+
+    task = st.text_input(
+        "📝 Task"
+    )
+
+    c1, c2 = st.columns(2)
+
+    due_date = c1.date_input(
+        "📅 Due Date",
+        value=date.today(),
+    )
+
+    due_time = c2.time_input(
+        "⏰ Due Time",
+        value=time(17, 0),
+    )
+
+    priority = st.selectbox(
+        "⚡ Priority",
+        [
+            "High",
+            "Medium",
+            "Low",
+        ],
+    )
+
+    notification = st.checkbox(
+        "🔔 Enable Task Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add Task"
+    )
+
+    if submit:
+
+        if task.strip():
+
+            st.session_state.tasks.append(
+                {
+                    "task":
+                        task.strip(),
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "priority":
+                        priority,
+
+                    "notification":
+                        notification,
+
+                    "completed":
+                        False,
+                }
+            )
+
+            st.success(
+                "✅ Task added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a task."
+            )
+
+st.divider()
+
+if not st.session_state.tasks:
+
+    st.info(
+        "No tasks added."
+    )
+
+for i, item in enumerate(
+    st.session_state.tasks
+):
+
+    completed = st.checkbox(
+        f"✅ {safe_value(item, 'task')}",
+        value=bool(
+            item.get(
+                "completed",
+                False,
+            )
+        ),
+        key=f"task_{i}",
+    )
+
+    item["completed"] = completed
+
+    st.caption(
+        f"📅 {safe_date(item)} | "
+        f"⏰ {safe_time(item)} | "
+        f"⚡ {safe_value(item, 'priority')} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Task",
+        key=f"task_delete_{i}",
+    ):
+
+        delete_item(
+            "tasks",
+            i,
+        )
+```
+
+# ============================================================
+
+# WELLNESS
+
+# ============================================================
+
+elif page == "❤️ Wellness":
+
+```
+st.header(
+    "❤️ Health & Wellness Agent"
+)
+
+with st.form("wellness_form"):
+
+    activity = st.text_input(
+        "❤️ Activity"
+    )
+
+    activity_type = st.selectbox(
+        "Activity Type",
+        [
+            "Exercise",
+            "Walking",
+            "Hydration",
+            "Meditation",
+            "Appointment",
+            "Other",
+        ],
+    )
+
+    c1, c2 = st.columns(2)
+
+    due_date = c1.date_input(
+        "📅 Date",
+        value=date.today(),
+    )
+
+    due_time = c2.time_input(
+        "⏰ Time",
+        value=time(7, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Wellness Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Schedule Wellness Activity"
+    )
+
+    if submit:
+
+        if activity.strip():
+
+            st.session_state.wellness.append(
+                {
+                    "activity":
+                        activity.strip(),
+
+                    "type":
+                        activity_type,
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Wellness activity scheduled."
+            )
+
+        else:
+
+            st.warning(
+                "Enter an activity."
+            )
+
+st.divider()
+
+if not st.session_state.wellness:
+
+    st.info(
+        "No wellness activities added."
+    )
+
+for i, item in enumerate(
+    st.session_state.wellness
+):
+
+    st.info(
+        f"❤️ **{safe_value(item, 'activity')}**\n\n"
+        f"Type: {safe_value(item, 'type')}\n\n"
+        f"📅 {safe_date(item)} | "
+        f"⏰ {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Wellness Activity",
+        key=f"wellness_delete_{i}",
+    ):
+
+        delete_item(
+            "wellness",
+            i,
+        )
+```
+
+# ============================================================
+
+# FINANCE
+
+# ============================================================
+
+elif page == "💰 Finance":
+
+```
+st.header(
+    "💰 Finance & Expense Management Agent"
+)
+
+with st.form("finance_form"):
+
+    description = st.text_input(
+        "Expense / Payment"
+    )
+
+    amount = st.number_input(
+        "Amount",
+        min_value=0.0,
+        step=100.0,
+    )
+
+    category = st.selectbox(
+        "Category",
+        [
+            "Food",
+            "Transport",
+            "Education",
+            "Utilities",
+            "Shopping",
+            "Bills",
+            "Other",
+        ],
+    )
+
+    c1, c2 = st.columns(2)
+
+    due_date = c1.date_input(
+        "📅 Payment Date",
+        value=date.today(),
+    )
+
+    due_time = c2.time_input(
+        "⏰ Payment Time",
+        value=time(12, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Payment Notification",
+        value=False,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add Expense"
+    )
+
+    if submit:
+
+        if description.strip():
+
+            st.session_state.expenses.append(
+                {
+                    "description":
+                        description.strip(),
+
+                    "amount":
+                        amount,
+
+                    "category":
+                        category,
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Expense added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a description."
+            )
+
+total = sum(
+    float(
+        item.get(
+            "amount",
+            0,
+        ) or 0
+    )
+    for item in st.session_state.expenses
+    if isinstance(item, dict)
+)
+
+st.metric(
+    "💰 Total Expenses",
+    f"{total:,.2f}",
+)
+
+st.divider()
+
+if not st.session_state.expenses:
+
+    st.info(
+        "No expenses added."
+    )
+
+for i, item in enumerate(
+    st.session_state.expenses
+):
+
+    amount_value = float(
+        item.get(
+            "amount",
+            0,
+        ) or 0
+    )
+
+    st.info(
+        f"💰 **{safe_value(item, 'description')}**\n\n"
+        f"Amount: {amount_value:,.2f}\n\n"
+        f"Category: {safe_value(item, 'category')}\n\n"
+        f"📅 {safe_date(item)} | "
+        f"⏰ {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Expense",
+        key=f"expense_delete_{i}",
+    ):
+
+        delete_item(
+            "expenses",
+            i,
+        )
+```
+
+# ============================================================
+
+# COMMUNICATION
+
+# ============================================================
+
+elif page == "🌐 Communication":
+
+```
+st.header(
+    "🌐 Information & Communication Agent"
+)
+
+content_type = st.selectbox(
+    "Content Type",
+    [
+        "Email",
+        "Announcement",
+        "Report",
+        "Message",
+        "Notice",
+    ],
+)
+
+recipient = st.text_input(
+    "Recipient / Audience"
+)
+
+subject = st.text_input(
+    "Subject"
+)
+
+content = st.text_area(
+    "Message Content",
+    height=150,
+)
+
+c1, c2 = st.columns(2)
+
+due_date = c1.date_input(
+    "📅 Schedule Date",
+    value=date.today(),
+)
+
+due_time = c2.time_input(
+    "⏰ Schedule Time",
+    value=time(10, 0),
+)
+
+notification = st.checkbox(
+    "🔔 Communication Notification",
+    value=False,
+)
+
+if st.button(
+    "✍️ Generate & Save",
+    use_container_width=True,
+):
+
+    if not content.strip():
+
+        st.warning(
+            "Please enter message content."
+        )
+
+    else:
+
+        generated = (
+            f"Dear Team,\n\n"
+            f"{content}\n\n"
+            f"Regards,\n"
+            f"OMNI AI"
+        )
+
+        st.session_state.communications.append(
+            {
+                "type":
+                    content_type,
+
+                "recipient":
+                    recipient,
+
+                "subject":
+                    subject or content_type,
+
+                "content":
+                    generated,
+
+                "due_date":
+                    due_date,
+
+                "due_time":
+                    due_time,
+
+                "notification":
+                    notification,
+            }
+        )
+
+        st.success(
+            "✅ Communication saved."
+        )
+
+        st.text_area(
+            "Generated Content",
+            generated,
+            height=180,
+        )
+
+st.divider()
+
+if not st.session_state.communications:
+
+    st.info(
+        "No communications saved."
+    )
+
+for i, item in enumerate(
+    st.session_state.communications
+):
+
+    st.info(
+        f"🌐 **{safe_value(item, 'subject')}**\n\n"
+        f"Type: {safe_value(item, 'type')}\n\n"
+        f"Recipient: {safe_value(item, 'recipient', '')}\n\n"
+        f"📅 {safe_date(item)} | "
+        f"⏰ {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    with st.expander(
+        "View Content"
+    ):
+
+        st.write(
+            safe_value(
+                item,
+                "content",
+                "",
+            )
+        )
+
+    if st.button(
+        "🗑️ Delete Communication",
+        key=f"communication_delete_{i}",
+    ):
+
+        delete_item(
+            "communications",
+            i,
+        )
+```
+
+# ============================================================
+
+# ROBOTICS
+
+# ============================================================
+
+elif page == "🤖 Robotics":
+
+```
+st.header(
+    "🤖 Robotics Agent"
+)
+
+controllers = [
+    "Arduino Uno",
+    "Arduino Mega",
+    "Arduino Nano",
+    "ESP32",
+    "ESP8266",
+    "Raspberry Pi",
+    "Raspberry Pi Pico",
+    "STM32",
+    "PLC",
+    "Jetson Nano",
+    "NVIDIA Jetson Orin",
+    "BeagleBone",
+    "Custom Controller",
+]
+
+components = [
+    "Ultrasonic HC-SR04",
+    "IR Sensor",
+    "PIR Sensor",
+    "LDR",
+    "DHT11",
+    "DHT22",
+    "MPU6050",
+    "MPU9250",
+    "GPS Module",
+    "RFID Reader",
+    "Camera",
+    "ESP32-CAM",
+    "Raspberry Pi Camera",
+    "LiDAR",
+    "Encoder",
+    "Load Cell",
+    "Gas Sensor",
+    "Soil Moisture Sensor",
+    "OLED",
+    "LCD",
+    "Relay",
+    "Servo Motor",
+    "DC Motor",
+    "Stepper Motor",
+    "L298N",
+    "L293D",
+    "TB6612FNG",
+    "PCA9685",
+    "Bluetooth HC-05",
+    "Bluetooth BLE",
+    "Wi-Fi",
+    "LoRa",
+    "CAN Bus",
+    "I2C",
+    "SPI",
+    "Ethernet",
+    "Battery / Power Module",
+    "Custom Component",
+]
+
+sensors = [
+    "No Sensor",
+    "Ultrasonic",
+    "IR",
+    "PIR",
+    "Camera",
+    "Depth Camera",
+    "IMU",
+    "GPS",
+    "LiDAR",
+    "Temperature",
+    "Humidity",
+    "Gas",
+    "Soil Moisture",
+    "Encoder",
+    "RFID",
+    "Hall Effect",
+    "Load Cell",
+    "Custom Sensor",
+]
+
+actuators = [
+    "No Actuator",
+    "DC Motor",
+    "Servo Motor",
+    "Stepper Motor",
+    "Relay",
+    "Solenoid",
+    "LED",
+    "Buzzer",
+    "Pneumatic Actuator",
+    "Hydraulic Actuator",
+    "Linear Actuator",
+    "Custom Actuator",
+]
+
+communication = [
+    "None",
+    "Wi-Fi",
+    "Bluetooth",
+    "BLE",
+    "LoRa",
+    "RF",
+    "CAN",
+    "UART",
+    "I2C",
+    "SPI",
+    "Ethernet",
+    "MQTT",
+    "Modbus",
+]
+
+applications = [
+    "Line Following Robot",
+    "Obstacle Avoidance Robot",
+    "Smart Home Robot",
+    "Industrial Automation",
+    "Computer Vision Robot",
+    "IoT Robot",
+    "Agricultural Robot",
+    "Security Robot",
+    "Educational Robot",
+    "Pick & Place Robot",
+    "Autonomous Mobile Robot",
+    "Humanoid Robot",
+    "Medical Assistance Robot",
+    "Custom Robotics Project",
+]
+
+with st.form("robotics_form"):
+
+    project = st.text_input(
+        "🤖 Project Name"
+    )
+
+    c1, c2 = st.columns(2)
+
+    controller = c1.selectbox(
+        "🎛️ Controller",
+        controllers,
+    )
+
+    component = c2.selectbox(
+        "🧩 Main Component",
+        components,
+    )
+
+    c3, c4 = st.columns(2)
+
+    sensor = c3.selectbox(
+        "📡 Sensor",
+        sensors,
+    )
+
+    actuator = c4.selectbox(
+        "⚙️ Actuator",
+        actuators,
+    )
+
+    c5, c6 = st.columns(2)
+
+    communication_type = c5.selectbox(
+        "📶 Communication",
+        communication,
+    )
+
+    application = c6.selectbox(
+        "🎯 Application",
+        applications,
+    )
+
+    objective = st.text_area(
+        "🎯 Project Objective"
+    )
+
+    c7, c8 = st.columns(2)
+
+    due_date = c7.date_input(
+        "📅 Project / Review Date",
+        value=date.today(),
+    )
+
+    due_time = c8.time_input(
+        "⏰ Project / Review Time",
+        value=time(15, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Enable Robotics Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add Robotics Project"
+    )
+
+    if submit:
+
+        if project.strip():
+
+            st.session_state.robotics.append(
+                {
+                    "project":
+                        project.strip(),
+
+                    "controller":
+                        controller,
+
+                    "component":
+                        component,
+
+                    "sensor":
+                        sensor,
+
+                    "actuator":
+                        actuator,
+
+                    "communication":
+                        communication_type,
+
+                    "application":
+                        application,
+
+                    "objective":
+                        objective,
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Robotics project added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a project name."
+            )
+
+st.divider()
+
+if not st.session_state.robotics:
+
+    st.info(
+        "No robotics projects added yet."
+    )
+
+for i, item in enumerate(
+    st.session_state.robotics
+):
+
+    st.info(
+        f"🤖 **{safe_value(item, 'project')}**\n\n"
+        f"🎛️ Controller: {safe_value(item, 'controller')}\n\n"
+        f"🧩 Component: {safe_value(item, 'component')}\n\n"
+        f"📡 Sensor: {safe_value(item, 'sensor')}\n\n"
+        f"⚙️ Actuator: {safe_value(item, 'actuator')}\n\n"
+        f"📶 Communication: {safe_value(item, 'communication')}\n\n"
+        f"🎯 Application: {safe_value(item, 'application')}\n\n"
+        f"📝 Objective: {safe_value(item, 'objective', '')}\n\n"
+        f"📅 Date: {safe_date(item)} | "
+        f"⏰ Time: {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Robotics Project",
+        key=f"robotics_delete_{i}",
+    ):
+
+        delete_item(
+            "robotics",
+            i,
+        )
+```
+
+# ============================================================
+
+# DRONES
+
+# ============================================================
+
+elif page == "🚁 Drones & Autonomous":
+
+```
+st.header(
+    "🚁 Drones & Autonomous Systems Agent"
+)
+
+platforms = [
+    "Quadcopter",
+    "Hexacopter",
+    "Octocopter",
+    "Fixed Wing UAV",
+    "VTOL UAV",
+    "UGV",
+    "Autonomous Vehicle",
+    "Custom Autonomous Platform",
+]
+
+controllers = [
+    "Pixhawk",
+    "ArduPilot",
+    "PX4",
+    "Raspberry Pi",
+    "Jetson",
+    "ESP32",
+    "Custom Flight Controller",
+]
+
+sensors = [
+    "RGB Camera",
+    "Depth Camera",
+    "Thermal Camera",
+    "LiDAR",
+    "GPS",
+    "IMU",
+    "Ultrasonic",
+    "Computer Vision Camera",
+    "Radar",
+    "Custom Sensor",
+]
+
+with st.form("drone_form"):
+
+    project = st.text_input(
+        "🚁 Mission / Project"
+    )
+
+    c1, c2 = st.columns(2)
+
+    platform = c1.selectbox(
+        "🛩️ Platform",
+        platforms,
+    )
+
+    controller = c2.selectbox(
+        "🎛️ Controller",
+        controllers,
+    )
+
+    c3, c4 = st.columns(2)
+
+    sensor = c3.selectbox(
+        "📡 Primary Sensor",
+        sensors,
+    )
+
+    navigation = c4.selectbox(
+        "🧭 Navigation",
+        [
+            "GPS",
+            "GPS + IMU",
+            "Visual Navigation",
+            "LiDAR Navigation",
+            "SLAM",
+            "Manual",
+            "Custom",
+        ],
+    )
+
+    mission = st.text_area(
+        "🎯 Mission Objective"
+    )
+
+    c5, c6 = st.columns(2)
+
+    due_date = c5.date_input(
+        "📅 Mission Date",
+        value=date.today(),
+    )
+
+    due_time = c6.time_input(
+        "⏰ Mission Time",
+        value=time(16, 0),
+    )
+
+    notification = st.checkbox(
+        "🔔 Mission Notification",
+        value=True,
+    )
+
+    submit = st.form_submit_button(
+        "➕ Add Mission"
+    )
+
+    if submit:
+
+        if project.strip():
+
+            st.session_state.drones.append(
+                {
+                    "project":
+                        project.strip(),
+
+                    "platform":
+                        platform,
+
+                    "controller":
+                        controller,
+
+                    "sensor":
+                        sensor,
+
+                    "navigation":
+                        navigation,
+
+                    "mission":
+                        mission,
+
+                    "due_date":
+                        due_date,
+
+                    "due_time":
+                        due_time,
+
+                    "notification":
+                        notification,
+                }
+            )
+
+            st.success(
+                "✅ Mission added."
+            )
+
+        else:
+
+            st.warning(
+                "Enter a mission/project name."
+            )
+
+st.divider()
+
+if not st.session_state.drones:
+
+    st.info(
+        "No autonomous missions added yet."
+    )
+
+for i, item in enumerate(
+    st.session_state.drones
+):
+
+    st.info(
+        f"🚁 **{safe_value(item, 'project')}**\n\n"
+        f"🛩️ Platform: {safe_value(item, 'platform')}\n\n"
+        f"🎛️ Controller: {safe_value(item, 'controller')}\n\n"
+        f"📡 Sensor: {safe_value(item, 'sensor')}\n\n"
+        f"🧭 Navigation: {safe_value(item, 'navigation')}\n\n"
+        f"🎯 Mission: {safe_value(item, 'mission', '')}\n\n"
+        f"📅 Date: {safe_date(item)} | "
+        f"⏰ Time: {safe_time(item)} | "
+        f"🔔 {'ON' if safe_bool(item) else 'OFF'}"
+    )
+
+    if st.button(
+        "🗑️ Delete Mission",
+        key=f"drone_delete_{i}",
+    ):
+
+        delete_item(
+            "drones",
+            i,
+        )
+```
+
+# ============================================================
+
+# FOOTER
+
+# ============================================================
+
+st.divider()
+
+st.caption(
+"🤖 OMNI AI | "
+"Omni-Agentic Intelligent Automation System | "
+"10 AI Agents | "
+"Demo + Grok API Mode | "
+"Streamlit + Python | "
+"No Database Dependency"
+)
+
+```
+```
