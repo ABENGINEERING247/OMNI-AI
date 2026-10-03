@@ -6,20 +6,72 @@ import streamlit as st
 # ==========================================================
 # OMNI AI
 # Omni-Agentic Intelligent Automation System
-# Demo Mode + Grok API Mode
-# Database-Free Architecture
-# ==========================================================
-
-
-# ==========================================================
-# PAGE CONFIGURATION
 # ==========================================================
 
 st.set_page_config(
-    page_title="OMNI AI",
+    page_title="OMNI AI - Omni-Agentic Intelligent Automation System",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
+)
+
+
+# ==========================================================
+# PROFESSIONAL HEADER
+# ==========================================================
+
+st.markdown(
+    """
+    <div style="
+        padding: 30px;
+        border-radius: 18px;
+        margin-bottom: 25px;
+        text-align: center;
+        border: 1px solid rgba(128,128,128,0.35);
+        background: linear-gradient(
+            135deg,
+            rgba(30,30,40,0.95),
+            rgba(45,45,65,0.95)
+        );
+    ">
+
+        <h1 style="
+            font-size: 46px;
+            margin-bottom: 5px;
+        ">
+            🤖 OMNI AI
+        </h1>
+
+        <h2 style="
+            font-size: 25px;
+            margin-top: 0;
+        ">
+            Omni-Agentic Intelligent Automation System
+        </h2>
+
+        <p style="
+            font-size: 18px;
+            margin-top: 15px;
+        ">
+            Grok-Powered Multi-Agent AI Solution
+        </p>
+
+        <p style="
+            font-size: 15px;
+            margin-top: 12px;
+        ">
+            10 Specialized AI Agents
+            &nbsp; • &nbsp;
+            Demo Mode
+            &nbsp; • &nbsp;
+            Grok API Mode
+            &nbsp; • &nbsp;
+            Streamlit
+        </p>
+
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -28,6 +80,7 @@ st.set_page_config(
 # ==========================================================
 
 AGENTS = {
+
     "⏰ Daily Reminder Agent":
         "Manages reminders, deadlines, routines and daily activities.",
 
@@ -115,7 +168,7 @@ def detect_agent(request):
         "training",
         "lesson",
         "programming",
-        "ai course"
+        "artificial intelligence"
     ]):
         return "📚 Learning & Education Agent"
 
@@ -452,7 +505,7 @@ def demo_response(request, agent):
 
 
 # ==========================================================
-# GROK API RESPONSE
+# GROK API
 # ==========================================================
 
 def grok_response(request, agent, api_key):
@@ -565,9 +618,9 @@ with st.sidebar:
     st.subheader("📊 System")
 
     st.write("Agents: **10**")
-    st.write("Database: **Not Required**")
+    st.write("AI Engine: **Grok**")
     st.write("Interface: **Streamlit**")
-    st.write("AI Engine: **Grok API**")
+    st.write("Database: **Not Required**")
 
 
 # ==========================================================
@@ -579,15 +632,11 @@ api_key = ""
 if mode == "🔑 Grok API Mode":
 
     try:
-
         api_key = st.secrets["XAI_API_KEY"]
-
     except Exception:
-
         api_key = ""
 
     if not api_key:
-
         api_key = os.getenv(
             "XAI_API_KEY",
             ""
@@ -595,20 +644,21 @@ if mode == "🔑 Grok API Mode":
 
 
 # ==========================================================
-# HOME / ORCHESTRATOR PAGE
+# HOME PAGE
 # ==========================================================
 
 if selected_navigation == "🏠 Home / Orchestrator":
 
-    st.title("🤖 OMNI AI")
+    st.title("🧠 AI Orchestrator")
 
     st.subheader(
-        "Omni-Agentic Intelligent Automation System"
+        "Central Intelligence & Agent Coordination"
     )
 
     st.write(
-        "A centralized multi-agent AI platform powered "
-        "by Streamlit, Python and Grok AI."
+        "The AI Orchestrator analyzes user requests "
+        "and routes them to the appropriate specialized "
+        "AI agent."
     )
 
     st.divider()
@@ -634,7 +684,7 @@ if selected_navigation == "🏠 Home / Orchestrator":
                 "XAI_API_KEY was not found."
             )
 
-    st.subheader("🧠 How OMNI AI Works")
+    st.subheader("🔄 OMNI AI Architecture")
 
     st.markdown(
         """
@@ -646,11 +696,15 @@ if selected_navigation == "🏠 Home / Orchestrator":
 
         ↓
 
-        **AI Orchestrator**
+        **AI Orchestrator / Master Agent**
 
         ↓
 
-        **Specialized Agent Selection**
+        **Agent Analysis & Selection**
+
+        ↓
+
+        **Specialized AI Agent**
 
         ↓
 
@@ -664,7 +718,7 @@ if selected_navigation == "🏠 Home / Orchestrator":
 
     st.divider()
 
-    st.subheader("🚀 Available Agents")
+    st.subheader("🚀 Specialized AI Agents")
 
     col1, col2 = st.columns(2)
 
@@ -704,7 +758,7 @@ else:
     if mode == "🎮 Demo Mode":
 
         st.success(
-            "🎮 Demo Mode — This agent is ready for testing."
+            "🎮 Demo Mode — Agent ready for testing."
         )
 
     else:
@@ -712,7 +766,7 @@ else:
         if api_key:
 
             st.success(
-                "🔑 Grok API Mode — This agent is connected "
+                "🔑 Grok API Mode — Agent connected "
                 "to the Grok reasoning engine."
             )
 
@@ -799,10 +853,6 @@ request = st.chat_input(
 
 if request:
 
-    # ------------------------------------------------------
-    # USER MESSAGE
-    # ------------------------------------------------------
-
     with st.chat_message("user"):
 
         st.markdown(request)
@@ -814,20 +864,14 @@ if request:
         }
     )
 
-    # ------------------------------------------------------
-    # AUTOMATIC AGENT DETECTION
-    # ------------------------------------------------------
-
-    detected_agent = detect_agent(request)
+    detected_agent = detect_agent(
+        request
+    )
 
     st.info(
         "🧠 **AI Orchestrator selected:** "
         + detected_agent
     )
-
-    # ------------------------------------------------------
-    # RESPONSE
-    # ------------------------------------------------------
 
     with st.chat_message("assistant"):
 
@@ -846,8 +890,7 @@ if request:
 
                 response = (
                     "⚠️ **Grok API key is not configured.**\n\n"
-                    "Please add the following to Streamlit "
-                    "Secrets:\n\n"
+                    "Add the following to Streamlit Secrets:\n\n"
                     "`XAI_API_KEY = \"YOUR_GROK_API_KEY\"`"
                 )
 
@@ -878,10 +921,6 @@ if request:
 
                     st.error(response)
 
-    # ------------------------------------------------------
-    # SAVE RESPONSE
-    # ------------------------------------------------------
-
     st.session_state.messages.append(
         {
             "role": "assistant",
@@ -896,7 +935,22 @@ if request:
 
 st.divider()
 
-st.caption(
-    "OMNI AI | 10-Agent Architecture | "
-    "Demo Mode + Grok API Mode | Database-Free"
+st.markdown(
+    """
+    <div style="text-align:center; padding:15px;">
+
+    <strong>🤖 OMNI AI</strong><br>
+
+    Omni-Agentic Intelligent Automation System<br>
+
+    <small>
+    Grok-Powered Multi-Agent AI Solution
+    • 10 Specialized Agents
+    • Demo + API Mode
+    • Streamlit
+    </small>
+
+    </div>
+    """,
+    unsafe_allow_html=True
 )
