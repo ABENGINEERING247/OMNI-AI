@@ -1,5 +1,7 @@
 import os
 import requests
+from datetime import datetime, date, time
+
 import streamlit as st
 
 
@@ -17,59 +19,49 @@ st.set_page_config(
 
 
 # ==========================================================
-# HEADER / BANNER
+# HEADER
 # ==========================================================
 
 st.title("🤖 OMNI AI")
-
-st.subheader(
-    "Omni-Agentic Intelligent Automation System"
-)
-
-st.write(
-    "Grok-Powered Multi-Agent AI Solution"
-)
-
+st.subheader("Omni-Agentic Intelligent Automation System")
+st.write("Grok-Powered Multi-Agent AI Solution")
 st.caption(
-    "10 Specialized AI Agents  •  Demo Mode  •  "
-    "Grok API Mode  •  Streamlit"
+    "10 Specialized AI Agents • Demo Mode • Grok API Mode • Streamlit"
 )
-
 st.divider()
 
 
 # ==========================================================
-# AGENT DEFINITIONS
+# AGENTS
 # ==========================================================
 
 AGENTS = {
-
     "⏰ Daily Reminder Agent":
-        "Manages reminders, deadlines, routines and daily activities.",
+        "Manages reminders, alarms, deadlines and routines.",
 
     "❤️ Health & Wellness Agent":
-        "Organizes wellness routines, fitness activities and appointments.",
+        "Manages wellness activities, fitness and appointments.",
 
     "📅 Calendar & Schedule Agent":
-        "Manages meetings, classes, events, appointments and schedules.",
+        "Manages meetings, events, classes and appointments.",
 
     "📚 Learning & Education Agent":
-        "Creates learning plans, study schedules, courses and revision plans.",
+        "Creates study plans, learning activities and revision schedules.",
 
     "📝 Productivity & Task Management Agent":
-        "Manages tasks, priorities, projects, notes and checklists.",
+        "Manages tasks, priorities, projects and checklists.",
 
     "💰 Finance & Expense Management Agent":
-        "Organizes user-provided expenses, budgets and spending summaries.",
+        "Manages demo expenses, budgets and spending summaries.",
 
     "🌐 Information & Communication Agent":
-        "Creates emails, messages, reports, announcements and summaries.",
+        "Creates emails, messages, announcements and reports.",
 
     "🤖 Robotics Agent":
-        "Provides assistance for robotics, embedded systems, sensors and automation.",
+        "Supports robotics, embedded systems, sensors and automation.",
 
     "🚁 Drones & Autonomous Systems Agent":
-        "Supports UAVs, drones, navigation, computer vision and autonomous systems."
+        "Supports drones, UAVs, navigation and autonomous systems."
 }
 
 
@@ -77,8 +69,35 @@ AGENTS = {
 # SESSION STATE
 # ==========================================================
 
+if "meetings" not in st.session_state:
+    st.session_state.meetings = []
+
+if "reminders" not in st.session_state:
+    st.session_state.reminders = []
+
+if "tasks" not in st.session_state:
+    st.session_state.tasks = []
+
+if "expenses" not in st.session_state:
+    st.session_state.expenses = []
+
+if "learning" not in st.session_state:
+    st.session_state.learning = []
+
+if "wellness" not in st.session_state:
+    st.session_state.wellness = []
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if "robotics_projects" not in st.session_state:
+    st.session_state.robotics_projects = []
+
+if "drone_projects" not in st.session_state:
+    st.session_state.drone_projects = []
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 
 # ==========================================================
@@ -89,112 +108,61 @@ def detect_agent(request):
 
     text = request.lower()
 
-    if any(word in text for word in [
-        "reminder",
-        "remind",
-        "deadline",
-        "routine",
-        "alarm"
+    if any(x in text for x in [
+        "reminder", "remind", "alarm", "deadline"
     ]):
         return "⏰ Daily Reminder Agent"
 
-    if any(word in text for word in [
-        "health",
-        "fitness",
-        "wellness",
-        "exercise",
-        "workout",
-        "diet"
+    if any(x in text for x in [
+        "health", "fitness", "wellness",
+        "exercise", "workout"
     ]):
         return "❤️ Health & Wellness Agent"
 
-    if any(word in text for word in [
-        "calendar",
-        "schedule",
-        "meeting",
-        "appointment",
-        "event",
-        "timetable",
-        "class"
+    if any(x in text for x in [
+        "calendar", "meeting", "schedule",
+        "appointment", "event", "class"
     ]):
         return "📅 Calendar & Schedule Agent"
 
-    if any(word in text for word in [
-        "learn",
-        "learning",
-        "study",
-        "education",
-        "python",
-        "course",
-        "exam",
-        "revision",
-        "training",
-        "lesson",
-        "programming",
-        "artificial intelligence",
-        "machine learning",
-        "deep learning"
+    if any(x in text for x in [
+        "learn", "learning", "study",
+        "education", "python", "course",
+        "exam", "revision", "training"
     ]):
         return "📚 Learning & Education Agent"
 
-    if any(word in text for word in [
-        "task",
-        "tasks",
-        "project",
-        "productivity",
-        "todo",
-        "to-do",
-        "checklist",
-        "priority",
-        "priorities"
+    if any(x in text for x in [
+        "task", "todo", "to-do",
+        "project", "productivity",
+        "checklist", "priority"
     ]):
         return "📝 Productivity & Task Management Agent"
 
-    if any(word in text for word in [
-        "expense",
-        "expenses",
-        "budget",
-        "money",
-        "finance",
-        "financial",
-        "spending",
-        "cost",
-        "payment"
+    if any(x in text for x in [
+        "expense", "expenses", "budget",
+        "finance", "money", "spending",
+        "payment", "cost"
     ]):
         return "💰 Finance & Expense Management Agent"
 
-    if any(word in text for word in [
-        "email",
-        "message",
-        "announcement",
-        "report",
-        "letter",
-        "communication",
-        "draft"
+    if any(x in text for x in [
+        "email", "message", "announcement",
+        "report", "letter", "communication"
     ]):
         return "🌐 Information & Communication Agent"
 
-    if any(word in text for word in [
-        "robot",
-        "robotics",
-        "arduino",
-        "raspberry pi",
-        "sensor",
-        "motor",
-        "embedded",
-        "automation",
-        "robotic arm"
+    if any(x in text for x in [
+        "robot", "robotics", "arduino",
+        "raspberry pi", "sensor", "motor",
+        "embedded", "robotic arm"
     ]):
         return "🤖 Robotics Agent"
 
-    if any(word in text for word in [
-        "drone",
-        "uav",
-        "unmanned",
-        "autonomous",
-        "navigation",
-        "flight",
-        "quadcopter"
+    if any(x in text for x in [
+        "drone", "uav", "autonomous",
+        "navigation", "quadcopter",
+        "flight"
     ]):
         return "🚁 Drones & Autonomous Systems Agent"
 
@@ -207,263 +175,258 @@ def detect_agent(request):
 
 def demo_response(request, agent):
 
-    if agent == "🧠 AI Orchestrator":
-
-        return (
-            "## 🧠 AI Orchestrator\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Agentic Workflow\n\n"
-            "1. User request received\n"
-            "2. Request analyzed\n"
-            "3. Appropriate agent identified\n"
-            "4. Agent processing initiated\n"
-            "5. Response generated\n\n"
-            "✅ Demo Orchestration completed."
-        )
-
     if agent == "⏰ Daily Reminder Agent":
+        return f"""
+## ⏰ Daily Reminder Agent
 
-        return (
-            "## ⏰ Daily Reminder Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Reminder Plan\n\n"
-            "- Morning routine\n"
-            "- Important task reminder\n"
-            "- Deadline reminder\n"
-            "- Afternoon activity\n"
-            "- Evening review\n\n"
-            "### Workflow\n\n"
-            "Identify → Prioritize → Schedule → Remind\n\n"
-            "✅ Reminder Demo completed."
-        )
+**Request:** {request}
 
-    if agent == "❤️ Health & Wellness Agent":
+### Demo Capabilities
 
-        return (
-            "## ❤️ Health & Wellness Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Wellness Plan\n\n"
-            "- Morning activity\n"
-            "- Hydration\n"
-            "- Fitness session\n"
-            "- Rest period\n"
-            "- Evening wellness review\n\n"
-            "### Workflow\n\n"
-            "Identify → Organize → Schedule → Review\n\n"
-            "✅ Wellness Demo completed.\n\n"
-            "> General wellness organization only; "
-            "not a substitute for professional medical advice."
-        )
+- Create reminder
+- Create alarm
+- Set deadline
+- Manage recurring routine
+- Organize daily activities
+- Review upcoming reminders
+
+✅ Demo Reminder Agent processed your request.
+"""
 
     if agent == "📅 Calendar & Schedule Agent":
+        return f"""
+## 📅 Calendar & Schedule Agent
 
-        return (
-            "## 📅 Calendar & Schedule Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Schedule\n\n"
-            "| Time | Activity |\n"
-            "|---|---|\n"
-            "| 09:00 AM | Meeting / Class |\n"
-            "| 11:00 AM | Project Work |\n"
-            "| 01:00 PM | Break |\n"
-            "| 03:00 PM | Review |\n"
-            "| 05:00 PM | Follow-up |\n\n"
-            "### Workflow\n\n"
-            "Identify → Schedule → Organize → Review\n\n"
-            "✅ Calendar Demo completed."
-        )
+**Request:** {request}
+
+### Demo Capabilities
+
+- Create meeting
+- Create appointment
+- Create class
+- Create event
+- Organize daily schedule
+- Review upcoming calendar
+- Detect basic scheduling conflicts
+
+✅ Demo Calendar Agent processed your request.
+"""
 
     if agent == "📚 Learning & Education Agent":
+        return f"""
+## 📚 Learning & Education Agent
 
-        return (
-            "## 📚 Learning & Education Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Learning Roadmap\n\n"
-            "#### Phase 1 — Fundamentals\n"
-            "- Basic concepts\n"
-            "- Terminology\n"
-            "- Simple exercises\n\n"
-            "#### Phase 2 — Practical Learning\n"
-            "- Practical exercises\n"
-            "- Mini projects\n"
-            "- Regular practice\n\n"
-            "#### Phase 3 — Advanced Practice\n"
-            "- Advanced concepts\n"
-            "- Complete project\n"
-            "- Testing\n\n"
-            "### Workflow\n\n"
-            "Objective → Roadmap → Practice → Project → Review\n\n"
-            "✅ Learning Demo completed."
-        )
+**Request:** {request}
+
+### Demo Learning Workflow
+
+1. Identify learning objective
+2. Create roadmap
+3. Divide into activities
+4. Schedule study
+5. Review progress
+
+### Example
+
+**Python + AI Learning**
+
+Week 1 → Python Fundamentals  
+Week 2 → Data & Machine Learning  
+Week 3 → Generative AI  
+Week 4 → Agentic AI Project
+
+✅ Demo Learning Agent processed your request.
+"""
 
     if agent == "📝 Productivity & Task Management Agent":
+        return f"""
+## 📝 Productivity & Task Management Agent
 
-        return (
-            "## 📝 Productivity & Task Management Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Priority System\n\n"
-            "**High Priority**\n"
-            "- Urgent work\n"
-            "- Important deadlines\n\n"
-            "**Medium Priority**\n"
-            "- Project activities\n"
-            "- Follow-up tasks\n\n"
-            "**Low Priority**\n"
-            "- Administrative work\n"
-            "- Optional activities\n\n"
-            "### Workflow\n\n"
-            "Identify → Prioritize → Execute → Review\n\n"
-            "✅ Productivity Demo completed."
-        )
+**Request:** {request}
+
+### Demo Workflow
+
+1. Capture task
+2. Assign priority
+3. Set deadline
+4. Track completion
+5. Review productivity
+
+✅ Demo Productivity Agent processed your request.
+"""
 
     if agent == "💰 Finance & Expense Management Agent":
+        return f"""
+## 💰 Finance & Expense Management Agent
 
-        return (
-            "## 💰 Finance & Expense Management Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Expense Categories\n\n"
-            "| Category | Example |\n"
-            "|---|---|\n"
-            "| Food | Meals |\n"
-            "| Transport | Fuel / Travel |\n"
-            "| Education | Courses / Books |\n"
-            "| Utilities | Electricity / Internet |\n"
-            "| Other | Miscellaneous |\n\n"
-            "### Workflow\n\n"
-            "Record → Categorize → Calculate → Summarize\n\n"
-            "✅ Finance Demo completed."
-        )
+**Request:** {request}
+
+### Demo Capabilities
+
+- Add expense
+- Categorize expense
+- Calculate totals
+- Review spending
+- Create budget summary
+
+⚠️ Demo financial data only.
+
+✅ Demo Finance Agent processed your request.
+"""
+
+    if agent == "❤️ Health & Wellness Agent":
+        return f"""
+## ❤️ Health & Wellness Agent
+
+**Request:** {request}
+
+### Demo Wellness Plan
+
+- Morning activity
+- Hydration
+- Fitness activity
+- Rest
+- Evening review
+
+⚠️ General wellness organization only.
+
+✅ Demo Wellness Agent processed your request.
+"""
 
     if agent == "🌐 Information & Communication Agent":
+        return f"""
+## 🌐 Information & Communication Agent
 
-        return (
-            "## 🌐 Information & Communication Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Communication Workflow\n\n"
-            "1. Understand purpose\n"
-            "2. Identify audience\n"
-            "3. Structure information\n"
-            "4. Generate professional content\n"
-            "5. Review output\n\n"
-            "### Demo Output\n\n"
-            "Dear Team,\n\n"
-            "This is a professional communication "
-            "generated through OMNI AI Demo Mode.\n\n"
-            "Regards,\n"
-            "OMNI AI\n\n"
-            "✅ Communication Demo completed."
-        )
+**Request:** {request}
+
+### Demo Communication Workflow
+
+Understand → Draft → Structure → Review → Finalize
+
+### Example
+
+**Subject: AI Workshop**
+
+Dear Team,
+
+This is a demonstration announcement generated
+by OMNI AI.
+
+Regards,  
+OMNI AI
+
+✅ Demo Communication Agent processed your request.
+"""
 
     if agent == "🤖 Robotics Agent":
+        return f"""
+## 🤖 Robotics Agent
 
-        return (
-            "## 🤖 Robotics Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Robotics Architecture\n\n"
-            "Sensors\n"
-            "↓\n"
-            "Microcontroller / Raspberry Pi\n"
-            "↓\n"
-            "AI Processing\n"
-            "↓\n"
-            "Decision Making\n"
-            "↓\n"
-            "Motor Controller\n"
-            "↓\n"
-            "Robot Actuators\n\n"
-            "### Possible Components\n\n"
-            "- Raspberry Pi\n"
-            "- Arduino / ESP32\n"
-            "- Camera\n"
-            "- Sensors\n"
-            "- Motor Driver\n"
-            "- DC Motors\n"
-            "- Battery\n\n"
-            "### Development Steps\n\n"
-            "1. Define objective\n"
-            "2. Select hardware\n"
-            "3. Connect sensors\n"
-            "4. Develop control logic\n"
-            "5. Add AI capability\n"
-            "6. Test system\n\n"
-            "✅ Robotics Demo completed."
-        )
+**Request:** {request}
+
+### Demo Robotics Architecture
+
+Sensors
+↓
+ESP32 / Arduino / Raspberry Pi
+↓
+AI Processing
+↓
+Decision Making
+↓
+Motor Controller
+↓
+Robot Actuators
+
+### Demo Components
+
+- ESP32
+- Raspberry Pi
+- Camera
+- Ultrasonic Sensor
+- Motor Driver
+- Motors
+- Battery
+
+✅ Demo Robotics Agent processed your request.
+"""
 
     if agent == "🚁 Drones & Autonomous Systems Agent":
+        return f"""
+## 🚁 Drones & Autonomous Systems Agent
 
-        return (
-            "## 🚁 Drones & Autonomous Systems Agent\n\n"
-            "**Request:**\n\n"
-            + request
-            + "\n\n"
-            "### Demo Autonomous Architecture\n\n"
-            "Camera / Sensors\n"
-            "↓\n"
-            "Perception\n"
-            "↓\n"
-            "AI Decision System\n"
-            "↓\n"
-            "Navigation\n"
-            "↓\n"
-            "Flight Controller\n"
-            "↓\n"
-            "Actuators\n\n"
-            "### Capabilities\n\n"
-            "- Object detection\n"
-            "- Navigation\n"
-            "- Obstacle detection\n"
-            "- Path planning\n"
-            "- Computer vision\n"
-            "- Autonomous inspection\n\n"
-            "### Development Workflow\n\n"
-            "Mission → Sensors → Perception → AI → Navigation → Control\n\n"
-            "✅ Autonomous Systems Demo completed."
-        )
+**Request:** {request}
 
-    return (
-        "## 🧠 AI Orchestrator\n\n"
-        "Request processed successfully."
-    )
+### Demo Autonomous Architecture
+
+Camera / Sensors
+↓
+Computer Vision
+↓
+AI Decision
+↓
+Navigation
+↓
+Flight Controller
+↓
+Actuators
+
+### Demo Capabilities
+
+- Object detection
+- Navigation
+- Obstacle avoidance
+- Path planning
+- Autonomous inspection
+
+✅ Demo Autonomous Systems Agent processed your request.
+"""
+
+    return f"""
+## 🧠 AI Orchestrator
+
+**Request:** {request}
+
+### Agentic Workflow
+
+User Request
+↓
+Request Analysis
+↓
+Agent Selection
+↓
+Specialized Agent
+↓
+Response Generation
+
+**Selected Agent:** {agent}
+
+✅ Demo Orchestration completed.
+"""
 
 
 # ==========================================================
-# GROK API RESPONSE
+# GROK API
 # ==========================================================
 
 def grok_response(request, agent, api_key):
 
     url = "https://api.x.ai/v1/chat/completions"
 
-    system_prompt = (
-        "You are OMNI AI, an intelligent multi-agent "
-        "automation platform.\n\n"
-        "The user's request has been routed to:\n"
-        + agent
-        + "\n\n"
-        "Act as this specialized agent.\n"
-        "Provide useful, structured and practical answers.\n"
-        "Use headings, lists and tables when appropriate.\n"
-        "Do not claim that you performed a real-world action "
-        "unless the application has the required integration."
-    )
+    system_prompt = f"""
+You are OMNI AI, an intelligent multi-agent AI platform.
+
+The selected specialized agent is:
+{agent}
+
+Provide a structured, practical response.
+
+Do not claim that a real-world action was completed
+unless an actual external integration exists.
+
+You are currently operating through the OMNI AI
+Streamlit application.
+"""
 
     payload = {
         "model": "grok-3-mini",
@@ -494,6 +457,13 @@ def grok_response(request, agent, api_key):
 
     if response.status_code != 200:
 
+        if response.status_code == 403:
+            raise Exception(
+                "Grok API credits or monthly spending limit "
+                "may have been reached. Please check xAI "
+                "billing/usage. Demo Mode remains available."
+            )
+
         raise Exception(
             "Grok API Error "
             + str(response.status_code)
@@ -514,27 +484,26 @@ with st.sidebar:
 
     st.title("🤖 OMNI AI")
 
-    st.caption(
-        "Agent Navigation"
-    )
+    st.caption("Agent Navigation")
 
     st.divider()
 
     navigation = [
-        "🏠 Home / Orchestrator",
-        "⏰ Daily Reminder Agent",
-        "❤️ Health & Wellness Agent",
-        "📅 Calendar & Schedule Agent",
-        "📚 Learning & Education Agent",
-        "📝 Productivity & Task Management Agent",
-        "💰 Finance & Expense Management Agent",
-        "🌐 Information & Communication Agent",
-        "🤖 Robotics Agent",
-        "🚁 Drones & Autonomous Systems Agent"
+        "🏠 Dashboard",
+        "🧠 AI Orchestrator",
+        "⏰ Reminders & Alarms",
+        "📅 Calendar & Meetings",
+        "📚 Learning",
+        "📝 Tasks & Productivity",
+        "❤️ Wellness",
+        "💰 Finance",
+        "🌐 Communication",
+        "🤖 Robotics",
+        "🚁 Drones & Autonomous"
     ]
 
-    selected_navigation = st.radio(
-        "Select Agent",
+    selected = st.radio(
+        "Select Module",
         navigation
     )
 
@@ -543,7 +512,7 @@ with st.sidebar:
     st.subheader("⚙️ Operating Mode")
 
     mode = st.radio(
-        "Select Mode",
+        "Mode",
         [
             "🎮 Demo Mode",
             "🔑 Grok API Mode"
@@ -552,12 +521,44 @@ with st.sidebar:
 
     st.divider()
 
-    st.subheader("📊 System Status")
+    st.subheader("📊 Demo Statistics")
 
-    st.write("AI Agents: **10**")
-    st.write("AI Engine: **Grok**")
-    st.write("Framework: **Streamlit**")
-    st.write("Database: **Not Required**")
+    st.write(
+        "Meetings:",
+        len(st.session_state.meetings)
+    )
+
+    st.write(
+        "Reminders:",
+        len(st.session_state.reminders)
+    )
+
+    st.write(
+        "Tasks:",
+        len(st.session_state.tasks)
+    )
+
+    st.write(
+        "Expenses:",
+        len(st.session_state.expenses)
+    )
+
+    st.divider()
+
+    if st.button("🗑️ Clear All Demo Data"):
+
+        st.session_state.meetings = []
+        st.session_state.reminders = []
+        st.session_state.tasks = []
+        st.session_state.expenses = []
+        st.session_state.learning = []
+        st.session_state.wellness = []
+        st.session_state.messages = []
+        st.session_state.robotics_projects = []
+        st.session_state.drone_projects = []
+
+        st.success("Demo data cleared.")
+        st.rerun()
 
 
 # ==========================================================
@@ -569,313 +570,806 @@ api_key = ""
 if mode == "🔑 Grok API Mode":
 
     try:
-
         api_key = st.secrets["XAI_API_KEY"]
-
     except Exception:
-
-        api_key = ""
-
-    if not api_key:
-
-        api_key = os.getenv(
-            "XAI_API_KEY",
-            ""
-        )
+        api_key = os.getenv("XAI_API_KEY", "")
 
 
 # ==========================================================
-# HOME / ORCHESTRATOR
+# DASHBOARD
 # ==========================================================
 
-if selected_navigation == "🏠 Home / Orchestrator":
+if selected == "🏠 Dashboard":
 
-    st.header(
-        "🧠 AI Orchestrator / Master Agent"
-    )
+    st.header("📊 OMNI AI Demo Dashboard")
 
     st.write(
-        "The central intelligence layer of OMNI AI. "
-        "It analyzes natural-language requests and "
-        "routes them to the appropriate specialized agent."
+        "Central control panel for the OMNI AI "
+        "multi-agent system."
     )
 
-    st.divider()
+    col1, col2, col3, col4 = st.columns(4)
 
-    if mode == "🎮 Demo Mode":
-
-        st.success(
-            "🎮 Demo Mode Active — No API key required."
+    with col1:
+        st.metric(
+            "📅 Meetings",
+            len(st.session_state.meetings)
         )
 
-    else:
+    with col2:
+        st.metric(
+            "⏰ Reminders",
+            len(st.session_state.reminders)
+        )
 
-        if api_key:
+    with col3:
+        st.metric(
+            "📝 Tasks",
+            len(st.session_state.tasks)
+        )
 
-            st.success(
-                "🔑 Grok API Mode Active — API key detected."
-            )
+    with col4:
+        total = sum(
+            x["amount"]
+            for x in st.session_state.expenses
+        )
 
-        else:
-
-            st.warning(
-                "⚠️ Grok API Mode selected, but "
-                "XAI_API_KEY was not found."
-            )
-
-    st.subheader("🔄 OMNI AI Architecture")
-
-    st.markdown(
-        """
-        **User Request**
-
-        ↓
-
-        **Streamlit Interface**
-
-        ↓
-
-        **AI Orchestrator**
-
-        ↓
-
-        **Agent Analysis & Selection**
-
-        ↓
-
-        **Specialized AI Agent**
-
-        ↓
-
-        **Grok AI Reasoning**
-
-        ↓
-
-        **Intelligent Response**
-        """
-    )
+        st.metric(
+            "💰 Expenses",
+            f"{total:,.0f}"
+        )
 
     st.divider()
 
-    st.subheader("🚀 Specialized AI Agents")
-
-    col1, col2 = st.columns(2)
-
-    agent_items = list(AGENTS.items())
-
-    for index, item in enumerate(agent_items):
-
-        name = item[0]
-        description = item[1]
-
-        if index % 2 == 0:
-
-            with col1:
-
-                st.info(
-                    "**"
-                    + name
-                    + "**\n\n"
-                    + description
-                )
-
-        else:
-
-            with col2:
-
-                st.info(
-                    "**"
-                    + name
-                    + "**\n\n"
-                    + description
-                )
-
-
-# ==========================================================
-# SPECIALIZED AGENT PAGE
-# ==========================================================
-
-else:
-
-    selected_agent = selected_navigation
-
-    st.header(selected_agent)
+    st.subheader("🤖 System Architecture")
 
     st.write(
-        AGENTS[selected_agent]
+        "User → Streamlit → AI Orchestrator → "
+        "Specialized Agent → Grok / Demo Engine → Response"
     )
 
     st.divider()
 
-    if mode == "🎮 Demo Mode":
+    st.subheader("🚀 Available Demo Modules")
+
+    cols = st.columns(3)
+
+    modules = [
+        "📅 Calendar & Meetings",
+        "⏰ Reminders & Alarms",
+        "📝 Tasks",
+        "💰 Expenses",
+        "📚 Learning",
+        "❤️ Wellness",
+        "🌐 Communication",
+        "🤖 Robotics",
+        "🚁 Autonomous Systems"
+    ]
+
+    for i, module in enumerate(modules):
+
+        with cols[i % 3]:
+            st.info(module)
+
+
+# ==========================================================
+# ORCHESTRATOR
+# ==========================================================
+
+elif selected == "🧠 AI Orchestrator":
+
+    st.header("🧠 AI Orchestrator")
+
+    st.write(
+        "Enter a natural-language request and OMNI AI "
+        "will select the appropriate agent."
+    )
+
+    request = st.text_area(
+        "Your Request",
+        placeholder=(
+            "Example: Schedule a meeting tomorrow at 10 AM "
+            "and remind me 30 minutes before."
+        )
+    )
+
+    if st.button("🚀 Process Request") and request:
+
+        agent = detect_agent(request)
 
         st.success(
-            "🎮 Demo Mode — Agent ready for testing."
+            "Selected Agent: " + agent
         )
-
-    else:
-
-        if api_key:
-
-            st.success(
-                "🔑 Grok API Mode — Agent connected."
-            )
-
-        else:
-
-            st.warning(
-                "⚠️ Add XAI_API_KEY in Streamlit "
-                "Secrets to use Grok API Mode."
-            )
-
-    st.subheader("💡 Example Request")
-
-    examples = {
-
-        "⏰ Daily Reminder Agent":
-            "Create reminders for my important activities today.",
-
-        "❤️ Health & Wellness Agent":
-            "Create a simple daily wellness routine.",
-
-        "📅 Calendar & Schedule Agent":
-            "Create a productive schedule for tomorrow.",
-
-        "📚 Learning & Education Agent":
-            "Create a 30-day Python and AI learning plan.",
-
-        "📝 Productivity & Task Management Agent":
-            "Create a priority task list for today.",
-
-        "💰 Finance & Expense Management Agent":
-            "Organize my monthly expenses into categories.",
-
-        "🌐 Information & Communication Agent":
-            "Write an announcement for an AI workshop.",
-
-        "🤖 Robotics Agent":
-            "Design a Raspberry Pi object detection robot.",
-
-        "🚁 Drones & Autonomous Systems Agent":
-            "Design an autonomous drone inspection system."
-    }
-
-    st.code(
-        examples[selected_agent],
-        language="text"
-    )
-
-
-# ==========================================================
-# CHAT HISTORY
-# ==========================================================
-
-if st.session_state.messages:
-
-    st.divider()
-
-    st.subheader("💬 Conversation")
-
-    for message in st.session_state.messages:
-
-        with st.chat_message(
-            message["role"]
-        ):
-
-            st.markdown(
-                message["content"]
-            )
-
-
-# ==========================================================
-# CHAT INPUT
-# ==========================================================
-
-request = st.chat_input(
-    "Ask OMNI AI anything..."
-)
-
-
-# ==========================================================
-# PROCESS REQUEST
-# ==========================================================
-
-if request:
-
-    with st.chat_message("user"):
-
-        st.markdown(request)
-
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": request
-        }
-    )
-
-    detected_agent = detect_agent(
-        request
-    )
-
-    st.info(
-        "🧠 **AI Orchestrator selected:** "
-        + detected_agent
-    )
-
-    with st.chat_message("assistant"):
 
         if mode == "🎮 Demo Mode":
 
-            response = demo_response(
-                request,
-                detected_agent
+            st.markdown(
+                demo_response(
+                    request,
+                    agent
+                )
             )
-
-            st.markdown(response)
 
         else:
 
             if not api_key:
 
-                response = (
-                    "⚠️ **Grok API key is not configured.**\n\n"
-                    "Please add this to Streamlit Secrets:\n\n"
-                    "`XAI_API_KEY = \"YOUR_GROK_API_KEY\"`"
+                st.error(
+                    "XAI_API_KEY is not configured."
                 )
-
-                st.warning(response)
 
             else:
 
                 try:
 
                     with st.spinner(
-                        "🤖 OMNI AI is thinking..."
+                        "OMNI AI is thinking..."
                     ):
 
-                        response = grok_response(
+                        result = grok_response(
                             request,
-                            detected_agent,
+                            agent,
                             api_key
                         )
 
-                    st.markdown(response)
+                    st.markdown(result)
 
                 except Exception as error:
 
-                    response = (
-                        "❌ **Grok API request failed.**\n\n"
-                        + str(error)
-                    )
+                    st.error(str(error))
 
-                    st.error(response)
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": response
-        }
+# ==========================================================
+# REMINDERS & ALARMS
+# ==========================================================
+
+elif selected == "⏰ Reminders & Alarms":
+
+    st.header("⏰ Reminders & Alarms")
+
+    st.write(
+        "Create and manage demo reminders and alarms."
     )
+
+    with st.form("reminder_form"):
+
+        title = st.text_input(
+            "Reminder / Alarm Title"
+        )
+
+        reminder_date = st.date_input(
+            "Date",
+            value=date.today()
+        )
+
+        reminder_time = st.time_input(
+            "Time",
+            value=time(9, 0)
+        )
+
+        repeat = st.selectbox(
+            "Repeat",
+            [
+                "Once",
+                "Daily",
+                "Weekly",
+                "Weekdays"
+            ]
+        )
+
+        priority = st.selectbox(
+            "Priority",
+            [
+                "High",
+                "Medium",
+                "Low"
+            ]
+        )
+
+        submitted = st.form_submit_button(
+            "➕ Add Reminder"
+        )
+
+        if submitted:
+
+            if title:
+
+                st.session_state.reminders.append(
+                    {
+                        "title": title,
+                        "date": reminder_date,
+                        "time": reminder_time,
+                        "repeat": repeat,
+                        "priority": priority
+                    }
+                )
+
+                st.success(
+                    "Reminder added successfully."
+                )
+
+            else:
+
+                st.warning(
+                    "Please enter a reminder title."
+                )
+
+    st.divider()
+
+    st.subheader("📋 Saved Reminders")
+
+    if st.session_state.reminders:
+
+        for i, item in enumerate(
+            st.session_state.reminders
+        ):
+
+            st.info(
+                f"⏰ **{item['title']}**\n\n"
+                f"📅 {item['date']}  "
+                f"🕐 {item['time']}\n\n"
+                f"🔁 {item['repeat']}  |  "
+                f"Priority: {item['priority']}"
+            )
+
+            if st.button(
+                "Delete",
+                key=f"delete_reminder_{i}"
+            ):
+
+                st.session_state.reminders.pop(i)
+                st.rerun()
+
+    else:
+
+        st.info(
+            "No reminders yet. Add your first reminder above."
+        )
+
+
+# ==========================================================
+# CALENDAR & MEETINGS
+# ==========================================================
+
+elif selected == "📅 Calendar & Meetings":
+
+    st.header("📅 Calendar & Meetings")
+
+    st.write(
+        "Create demo meetings, appointments, classes and events."
+    )
+
+    with st.form("meeting_form"):
+
+        meeting_title = st.text_input(
+            "Meeting / Event Title"
+        )
+
+        meeting_date = st.date_input(
+            "Date",
+            value=date.today()
+        )
+
+        meeting_time = st.time_input(
+            "Start Time",
+            value=time(10, 0)
+        )
+
+        duration = st.number_input(
+            "Duration (minutes)",
+            min_value=15,
+            max_value=480,
+            value=60,
+            step=15
+        )
+
+        location = st.text_input(
+            "Location / Platform",
+            placeholder="Conference Room / Zoom / Teams"
+        )
+
+        participants = st.text_input(
+            "Participants"
+        )
+
+        meeting_type = st.selectbox(
+            "Type",
+            [
+                "Meeting",
+                "Class",
+                "Appointment",
+                "Event",
+                "Project Review"
+            ]
+        )
+
+        add_meeting = st.form_submit_button(
+            "➕ Add to Calendar"
+        )
+
+        if add_meeting:
+
+            if meeting_title:
+
+                st.session_state.meetings.append(
+                    {
+                        "title": meeting_title,
+                        "date": meeting_date,
+                        "time": meeting_time,
+                        "duration": duration,
+                        "location": location,
+                        "participants": participants,
+                        "type": meeting_type
+                    }
+                )
+
+                st.success(
+                    "Calendar item added."
+                )
+
+            else:
+
+                st.warning(
+                    "Please enter meeting/event title."
+                )
+
+    st.divider()
+
+    st.subheader("📆 Upcoming Calendar")
+
+    if st.session_state.meetings:
+
+        sorted_meetings = sorted(
+            st.session_state.meetings,
+            key=lambda x: (
+                x["date"],
+                x["time"]
+            )
+        )
+
+        for i, meeting in enumerate(
+            sorted_meetings
+        ):
+
+            st.info(
+                f"📌 **{meeting['title']}**\n\n"
+                f"📅 {meeting['date']}  "
+                f"🕐 {meeting['time']}\n\n"
+                f"⏱️ {meeting['duration']} minutes\n\n"
+                f"📍 {meeting['location'] or 'Not specified'}\n\n"
+                f"👥 {meeting['participants'] or 'Not specified'}\n\n"
+                f"🏷️ {meeting['type']}"
+            )
+
+    else:
+
+        st.info(
+            "Calendar is empty. Add a meeting or event above."
+        )
+
+
+# ==========================================================
+# TASKS
+# ==========================================================
+
+elif selected == "📝 Tasks & Productivity":
+
+    st.header("📝 Tasks & Productivity")
+
+    with st.form("task_form"):
+
+        task = st.text_input(
+            "Task"
+        )
+
+        task_priority = st.selectbox(
+            "Priority",
+            [
+                "High",
+                "Medium",
+                "Low"
+            ]
+        )
+
+        task_due = st.date_input(
+            "Due Date",
+            value=date.today()
+        )
+
+        add_task = st.form_submit_button(
+            "➕ Add Task"
+        )
+
+        if add_task and task:
+
+            st.session_state.tasks.append(
+                {
+                    "task": task,
+                    "priority": task_priority,
+                    "due": task_due,
+                    "completed": False
+                }
+            )
+
+            st.success(
+                "Task added."
+            )
+
+    st.divider()
+
+    for i, item in enumerate(
+        st.session_state.tasks
+    ):
+
+        completed = st.checkbox(
+            item["task"],
+            value=item["completed"],
+            key=f"task_{i}"
+        )
+
+        item["completed"] = completed
+
+        st.caption(
+            f"Priority: {item['priority']} | "
+            f"Due: {item['due']}"
+        )
+
+
+# ==========================================================
+# FINANCE
+# ==========================================================
+
+elif selected == "💰 Finance":
+
+    st.header("💰 Finance & Expense Manager")
+
+    with st.form("expense_form"):
+
+        description = st.text_input(
+            "Expense Description"
+        )
+
+        amount = st.number_input(
+            "Amount",
+            min_value=0.0,
+            step=100.0
+        )
+
+        category = st.selectbox(
+            "Category",
+            [
+                "Food",
+                "Transport",
+                "Education",
+                "Utilities",
+                "Shopping",
+                "Other"
+            ]
+        )
+
+        expense_date = st.date_input(
+            "Date",
+            value=date.today()
+        )
+
+        add_expense = st.form_submit_button(
+            "➕ Add Expense"
+        )
+
+        if add_expense and description:
+
+            st.session_state.expenses.append(
+                {
+                    "description": description,
+                    "amount": amount,
+                    "category": category,
+                    "date": expense_date
+                }
+            )
+
+            st.success(
+                "Expense added."
+            )
+
+    st.divider()
+
+    total = sum(
+        x["amount"]
+        for x in st.session_state.expenses
+    )
+
+    st.metric(
+        "💰 Total Demo Expenses",
+        f"{total:,.2f}"
+    )
+
+    if st.session_state.expenses:
+
+        for item in st.session_state.expenses:
+
+            st.write(
+                f"**{item['description']}** — "
+                f"{item['amount']:,.2f} — "
+                f"{item['category']} — "
+                f"{item['date']}"
+            )
+
+
+# ==========================================================
+# LEARNING
+# ==========================================================
+
+elif selected == "📚 Learning":
+
+    st.header("📚 Learning & Education Agent")
+
+    with st.form("learning_form"):
+
+        subject = st.text_input(
+            "Subject / Course"
+        )
+
+        learning_goal = st.text_input(
+            "Learning Goal"
+        )
+
+        duration = st.number_input(
+            "Duration (days)",
+            min_value=1,
+            max_value=365,
+            value=30
+        )
+
+        add_learning = st.form_submit_button(
+            "➕ Add Learning Plan"
+        )
+
+        if add_learning and subject:
+
+            st.session_state.learning.append(
+                {
+                    "subject": subject,
+                    "goal": learning_goal,
+                    "duration": duration
+                }
+            )
+
+            st.success(
+                "Learning plan created."
+            )
+
+    for item in st.session_state.learning:
+
+        st.info(
+            f"📚 **{item['subject']}**\n\n"
+            f"Goal: {item['goal']}\n\n"
+            f"Duration: {item['duration']} days"
+        )
+
+
+# ==========================================================
+# WELLNESS
+# ==========================================================
+
+elif selected == "❤️ Wellness":
+
+    st.header("❤️ Health & Wellness")
+
+    with st.form("wellness_form"):
+
+        activity = st.text_input(
+            "Activity"
+        )
+
+        wellness_time = st.time_input(
+            "Time",
+            value=time(7, 0)
+        )
+
+        wellness_type = st.selectbox(
+            "Type",
+            [
+                "Exercise",
+                "Walking",
+                "Hydration",
+                "Meditation",
+                "Appointment",
+                "Other"
+            ]
+        )
+
+        add_wellness = st.form_submit_button(
+            "➕ Add Wellness Activity"
+        )
+
+        if add_wellness and activity:
+
+            st.session_state.wellness.append(
+                {
+                    "activity": activity,
+                    "time": wellness_time,
+                    "type": wellness_type
+                }
+            )
+
+            st.success(
+                "Wellness activity added."
+            )
+
+    for item in st.session_state.wellness:
+
+        st.info(
+            f"❤️ **{item['activity']}** — "
+            f"{item['time']} — {item['type']}"
+        )
+
+
+# ==========================================================
+# COMMUNICATION
+# ==========================================================
+
+elif selected == "🌐 Communication":
+
+    st.header("🌐 Information & Communication")
+
+    communication_type = st.selectbox(
+        "Content Type",
+        [
+            "Email",
+            "Announcement",
+            "Report",
+            "Message",
+            "Notice"
+        ]
+    )
+
+    recipient = st.text_input(
+        "Recipient / Audience"
+    )
+
+    subject = st.text_input(
+        "Subject"
+    )
+
+    content = st.text_area(
+        "Message / Content"
+    )
+
+    if st.button("✍️ Generate Demo Draft"):
+
+        draft = (
+            f"## {communication_type}\n\n"
+            f"**To:** {recipient}\n\n"
+            f"**Subject:** {subject}\n\n"
+            f"Dear Team,\n\n"
+            f"{content}\n\n"
+            f"Regards,\n"
+            f"OMNI AI"
+        )
+
+        st.markdown(draft)
+
+
+# ==========================================================
+# ROBOTICS
+# ==========================================================
+
+elif selected == "🤖 Robotics":
+
+    st.header("🤖 Robotics Agent")
+
+    with st.form("robotics_form"):
+
+        project = st.text_input(
+            "Robotics Project"
+        )
+
+        controller = st.selectbox(
+            "Controller",
+            [
+                "Arduino",
+                "ESP32",
+                "Raspberry Pi",
+                "STM32"
+            ]
+        )
+
+        sensor = st.text_input(
+            "Main Sensor"
+        )
+
+        objective = st.text_area(
+            "Project Objective"
+        )
+
+        add_robot = st.form_submit_button(
+            "➕ Create Demo Project"
+        )
+
+        if add_robot and project:
+
+            st.session_state.robotics_projects.append(
+                {
+                    "project": project,
+                    "controller": controller,
+                    "sensor": sensor,
+                    "objective": objective
+                }
+            )
+
+            st.success(
+                "Robotics project created."
+            )
+
+    for item in st.session_state.robotics_projects:
+
+        st.info(
+            f"🤖 **{item['project']}**\n\n"
+            f"Controller: {item['controller']}\n\n"
+            f"Sensor: {item['sensor']}\n\n"
+            f"Objective: {item['objective']}"
+        )
+
+
+# ==========================================================
+# DRONES
+# ==========================================================
+
+elif selected == "🚁 Drones & Autonomous":
+
+    st.header("🚁 Drones & Autonomous Systems")
+
+    with st.form("drone_form"):
+
+        project = st.text_input(
+            "Autonomous Project"
+        )
+
+        platform = st.selectbox(
+            "Platform",
+            [
+                "Quadcopter",
+                "Fixed Wing UAV",
+                "Ground Robot",
+                "Autonomous Vehicle"
+            ]
+        )
+
+        sensor = st.text_input(
+            "Sensor / Camera"
+        )
+
+        mission = st.text_area(
+            "Mission Objective"
+        )
+
+        add_drone = st.form_submit_button(
+            "➕ Create Demo Mission"
+        )
+
+        if add_drone and project:
+
+            st.session_state.drone_projects.append(
+                {
+                    "project": project,
+                    "platform": platform,
+                    "sensor": sensor,
+                    "mission": mission
+                }
+            )
+
+            st.success(
+                "Autonomous mission created."
+            )
+
+    for item in st.session_state.drone_projects:
+
+        st.info(
+            f"🚁 **{item['project']}**\n\n"
+            f"Platform: {item['platform']}\n\n"
+            f"Sensor: {item['sensor']}\n\n"
+            f"Mission: {item['mission']}"
+        )
 
 
 # ==========================================================
@@ -886,5 +1380,5 @@ st.divider()
 
 st.caption(
     "🤖 OMNI AI | Omni-Agentic Intelligent Automation System | "
-    "10 AI Agents | Demo + Grok API Mode"
+    "10 AI Agents | Demo + Grok API Mode | Database-Free Demo"
 )
