@@ -9,7 +9,7 @@ import streamlit as st
 # ==========================================================
 
 st.set_page_config(
-    page_title="OMNI AI - Omni-Agentic Intelligent Automation System",
+    page_title="OMNI AI",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -17,62 +17,25 @@ st.set_page_config(
 
 
 # ==========================================================
-# PROFESSIONAL HEADER
+# HEADER / BANNER
 # ==========================================================
 
-st.markdown(
-    """
-    <div style="
-        padding: 30px;
-        border-radius: 18px;
-        margin-bottom: 25px;
-        text-align: center;
-        border: 1px solid rgba(128,128,128,0.35);
-        background: linear-gradient(
-            135deg,
-            rgba(30,30,40,0.95),
-            rgba(45,45,65,0.95)
-        );
-    ">
+st.title("🤖 OMNI AI")
 
-        <h1 style="
-            font-size: 46px;
-            margin-bottom: 5px;
-        ">
-            🤖 OMNI AI
-        </h1>
-
-        <h2 style="
-            font-size: 25px;
-            margin-top: 0;
-        ">
-            Omni-Agentic Intelligent Automation System
-        </h2>
-
-        <p style="
-            font-size: 18px;
-            margin-top: 15px;
-        ">
-            Grok-Powered Multi-Agent AI Solution
-        </p>
-
-        <p style="
-            font-size: 15px;
-            margin-top: 12px;
-        ">
-            10 Specialized AI Agents
-            &nbsp; • &nbsp;
-            Demo Mode
-            &nbsp; • &nbsp;
-            Grok API Mode
-            &nbsp; • &nbsp;
-            Streamlit
-        </p>
-
-    </div>
-    """,
-    unsafe_allow_html=True
+st.subheader(
+    "Omni-Agentic Intelligent Automation System"
 )
+
+st.write(
+    "Grok-Powered Multi-Agent AI Solution"
+)
+
+st.caption(
+    "10 Specialized AI Agents  •  Demo Mode  •  "
+    "Grok API Mode  •  Streamlit"
+)
+
+st.divider()
 
 
 # ==========================================================
@@ -168,7 +131,9 @@ def detect_agent(request):
         "training",
         "lesson",
         "programming",
-        "artificial intelligence"
+        "artificial intelligence",
+        "machine learning",
+        "deep learning"
     ]):
         return "📚 Learning & Education Agent"
 
@@ -246,38 +211,33 @@ def demo_response(request, agent):
 
         return (
             "## 🧠 AI Orchestrator\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
-            "### Agentic Analysis\n\n"
-            "OMNI AI analyzed your request and selected "
-            "the appropriate processing route.\n\n"
-            "### Workflow\n\n"
+            "### Agentic Workflow\n\n"
             "1. User request received\n"
             "2. Request analyzed\n"
-            "3. Specialized agent identified\n"
-            "4. Response generated\n\n"
-            "✅ Orchestrator Demo completed."
+            "3. Appropriate agent identified\n"
+            "4. Agent processing initiated\n"
+            "5. Response generated\n\n"
+            "✅ Demo Orchestration completed."
         )
 
     if agent == "⏰ Daily Reminder Agent":
 
         return (
             "## ⏰ Daily Reminder Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Reminder Plan\n\n"
             "- Morning routine\n"
-            "- Priority task reminder\n"
-            "- Important deadline\n"
-            "- Afternoon review\n"
-            "- Evening daily review\n\n"
+            "- Important task reminder\n"
+            "- Deadline reminder\n"
+            "- Afternoon activity\n"
+            "- Evening review\n\n"
             "### Workflow\n\n"
-            "1. Identify reminder\n"
-            "2. Determine priority\n"
-            "3. Organize time\n"
-            "4. Prepare reminder\n\n"
+            "Identify → Prioritize → Schedule → Remind\n\n"
             "✅ Reminder Demo completed."
         )
 
@@ -285,31 +245,27 @@ def demo_response(request, agent):
 
         return (
             "## ❤️ Health & Wellness Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Wellness Plan\n\n"
             "- Morning activity\n"
-            "- Hydration reminder\n"
+            "- Hydration\n"
             "- Fitness session\n"
             "- Rest period\n"
             "- Evening wellness review\n\n"
             "### Workflow\n\n"
-            "1. Identify wellness activity\n"
-            "2. Organize routine\n"
-            "3. Schedule activity\n"
-            "4. Review progress\n\n"
+            "Identify → Organize → Schedule → Review\n\n"
             "✅ Wellness Demo completed.\n\n"
-            "> This is a general wellness organization "
-            "demonstration and does not replace professional "
-            "medical advice."
+            "> General wellness organization only; "
+            "not a substitute for professional medical advice."
         )
 
     if agent == "📅 Calendar & Schedule Agent":
 
         return (
             "## 📅 Calendar & Schedule Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Schedule\n\n"
@@ -317,14 +273,11 @@ def demo_response(request, agent):
             "|---|---|\n"
             "| 09:00 AM | Meeting / Class |\n"
             "| 11:00 AM | Project Work |\n"
-            "| 01:00 PM | Lunch |\n"
+            "| 01:00 PM | Break |\n"
             "| 03:00 PM | Review |\n"
             "| 05:00 PM | Follow-up |\n\n"
             "### Workflow\n\n"
-            "1. Identify event\n"
-            "2. Select time\n"
-            "3. Organize schedule\n"
-            "4. Review conflicts\n\n"
+            "Identify → Schedule → Organize → Review\n\n"
             "✅ Calendar Demo completed."
         )
 
@@ -332,7 +285,7 @@ def demo_response(request, agent):
 
         return (
             "## 📚 Learning & Education Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Learning Roadmap\n\n"
@@ -347,13 +300,9 @@ def demo_response(request, agent):
             "#### Phase 3 — Advanced Practice\n"
             "- Advanced concepts\n"
             "- Complete project\n"
-            "- Testing and improvement\n\n"
+            "- Testing\n\n"
             "### Workflow\n\n"
-            "1. Identify learning objective\n"
-            "2. Create roadmap\n"
-            "3. Schedule learning\n"
-            "4. Practice\n"
-            "5. Review progress\n\n"
+            "Objective → Roadmap → Practice → Project → Review\n\n"
             "✅ Learning Demo completed."
         )
 
@@ -361,24 +310,21 @@ def demo_response(request, agent):
 
         return (
             "## 📝 Productivity & Task Management Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Priority System\n\n"
             "**High Priority**\n"
-            "- Urgent tasks\n"
+            "- Urgent work\n"
             "- Important deadlines\n\n"
             "**Medium Priority**\n"
             "- Project activities\n"
-            "- Follow-up work\n\n"
+            "- Follow-up tasks\n\n"
             "**Low Priority**\n"
-            "- Administrative tasks\n"
+            "- Administrative work\n"
             "- Optional activities\n\n"
             "### Workflow\n\n"
-            "1. Identify tasks\n"
-            "2. Assign priorities\n"
-            "3. Complete important work\n"
-            "4. Review progress\n\n"
+            "Identify → Prioritize → Execute → Review\n\n"
             "✅ Productivity Demo completed."
         )
 
@@ -386,23 +332,19 @@ def demo_response(request, agent):
 
         return (
             "## 💰 Finance & Expense Management Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Expense Categories\n\n"
             "| Category | Example |\n"
             "|---|---|\n"
-            "| Food | Daily meals |\n"
-            "| Transport | Fuel / travel |\n"
-            "| Education | Courses / books |\n"
+            "| Food | Meals |\n"
+            "| Transport | Fuel / Travel |\n"
+            "| Education | Courses / Books |\n"
             "| Utilities | Electricity / Internet |\n"
             "| Other | Miscellaneous |\n\n"
             "### Workflow\n\n"
-            "1. Record expense\n"
-            "2. Categorize expense\n"
-            "3. Calculate totals\n"
-            "4. Review spending\n"
-            "5. Prepare summary\n\n"
+            "Record → Categorize → Calculate → Summarize\n\n"
             "✅ Finance Demo completed."
         )
 
@@ -410,16 +352,19 @@ def demo_response(request, agent):
 
         return (
             "## 🌐 Information & Communication Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
-            "### Demo Communication\n\n"
-            "**AI Workshop Announcement**\n\n"
+            "### Demo Communication Workflow\n\n"
+            "1. Understand purpose\n"
+            "2. Identify audience\n"
+            "3. Structure information\n"
+            "4. Generate professional content\n"
+            "5. Review output\n\n"
+            "### Demo Output\n\n"
             "Dear Team,\n\n"
-            "This is a demonstration communication "
-            "generated by OMNI AI.\n\n"
-            "The requested information has been "
-            "structured for professional communication.\n\n"
+            "This is a professional communication "
+            "generated through OMNI AI Demo Mode.\n\n"
             "Regards,\n"
             "OMNI AI\n\n"
             "✅ Communication Demo completed."
@@ -429,7 +374,7 @@ def demo_response(request, agent):
 
         return (
             "## 🤖 Robotics Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Robotics Architecture\n\n"
@@ -448,17 +393,17 @@ def demo_response(request, agent):
             "- Raspberry Pi\n"
             "- Arduino / ESP32\n"
             "- Camera\n"
-            "- Ultrasonic sensors\n"
-            "- Motor driver\n"
-            "- DC motors\n"
+            "- Sensors\n"
+            "- Motor Driver\n"
+            "- DC Motors\n"
             "- Battery\n\n"
             "### Development Steps\n\n"
-            "1. Define robot objective\n"
+            "1. Define objective\n"
             "2. Select hardware\n"
             "3. Connect sensors\n"
             "4. Develop control logic\n"
             "5. Add AI capability\n"
-            "6. Test the system\n\n"
+            "6. Test system\n\n"
             "✅ Robotics Demo completed."
         )
 
@@ -466,7 +411,7 @@ def demo_response(request, agent):
 
         return (
             "## 🚁 Drones & Autonomous Systems Agent\n\n"
-            "**Your Request:**\n\n"
+            "**Request:**\n\n"
             + request
             + "\n\n"
             "### Demo Autonomous Architecture\n\n"
@@ -489,12 +434,7 @@ def demo_response(request, agent):
             "- Computer vision\n"
             "- Autonomous inspection\n\n"
             "### Development Workflow\n\n"
-            "1. Define mission\n"
-            "2. Select sensors\n"
-            "3. Design navigation\n"
-            "4. Add computer vision\n"
-            "5. Implement safety logic\n"
-            "6. Test in simulation\n\n"
+            "Mission → Sensors → Perception → AI → Navigation → Control\n\n"
             "✅ Autonomous Systems Demo completed."
         )
 
@@ -505,7 +445,7 @@ def demo_response(request, agent):
 
 
 # ==========================================================
-# GROK API
+# GROK API RESPONSE
 # ==========================================================
 
 def grok_response(request, agent, api_key):
@@ -515,15 +455,14 @@ def grok_response(request, agent, api_key):
     system_prompt = (
         "You are OMNI AI, an intelligent multi-agent "
         "automation platform.\n\n"
-        "The user request has been routed to this agent:\n"
+        "The user's request has been routed to:\n"
         + agent
         + "\n\n"
         "Act as this specialized agent.\n"
-        "Provide practical, structured and useful answers.\n"
-        "Use headings, lists and tables where appropriate.\n"
-        "Do not claim that a real-world action was completed "
-        "unless the application actually has the required "
-        "integration or tool."
+        "Provide useful, structured and practical answers.\n"
+        "Use headings, lists and tables when appropriate.\n"
+        "Do not claim that you performed a real-world action "
+        "unless the application has the required integration."
     )
 
     payload = {
@@ -568,7 +507,7 @@ def grok_response(request, agent, api_key):
 
 
 # ==========================================================
-# SIDEBAR NAVIGATION
+# SIDEBAR
 # ==========================================================
 
 with st.sidebar:
@@ -576,12 +515,10 @@ with st.sidebar:
     st.title("🤖 OMNI AI")
 
     st.caption(
-        "Omni-Agentic Intelligent Automation System"
+        "Agent Navigation"
     )
 
     st.divider()
-
-    st.subheader("🧭 Agent Navigation")
 
     navigation = [
         "🏠 Home / Orchestrator",
@@ -615,11 +552,11 @@ with st.sidebar:
 
     st.divider()
 
-    st.subheader("📊 System")
+    st.subheader("📊 System Status")
 
-    st.write("Agents: **10**")
+    st.write("AI Agents: **10**")
     st.write("AI Engine: **Grok**")
-    st.write("Interface: **Streamlit**")
+    st.write("Framework: **Streamlit**")
     st.write("Database: **Not Required**")
 
 
@@ -632,11 +569,15 @@ api_key = ""
 if mode == "🔑 Grok API Mode":
 
     try:
+
         api_key = st.secrets["XAI_API_KEY"]
+
     except Exception:
+
         api_key = ""
 
     if not api_key:
+
         api_key = os.getenv(
             "XAI_API_KEY",
             ""
@@ -644,21 +585,19 @@ if mode == "🔑 Grok API Mode":
 
 
 # ==========================================================
-# HOME PAGE
+# HOME / ORCHESTRATOR
 # ==========================================================
 
 if selected_navigation == "🏠 Home / Orchestrator":
 
-    st.title("🧠 AI Orchestrator")
-
-    st.subheader(
-        "Central Intelligence & Agent Coordination"
+    st.header(
+        "🧠 AI Orchestrator / Master Agent"
     )
 
     st.write(
-        "The AI Orchestrator analyzes user requests "
-        "and routes them to the appropriate specialized "
-        "AI agent."
+        "The central intelligence layer of OMNI AI. "
+        "It analyzes natural-language requests and "
+        "routes them to the appropriate specialized agent."
     )
 
     st.divider()
@@ -696,7 +635,7 @@ if selected_navigation == "🏠 Home / Orchestrator":
 
         ↓
 
-        **AI Orchestrator / Master Agent**
+        **AI Orchestrator**
 
         ↓
 
@@ -729,14 +668,27 @@ if selected_navigation == "🏠 Home / Orchestrator":
         name = item[0]
         description = item[1]
 
-        with col1 if index % 2 == 0 else col2:
+        if index % 2 == 0:
 
-            st.info(
-                "**"
-                + name
-                + "**\n\n"
-                + description
-            )
+            with col1:
+
+                st.info(
+                    "**"
+                    + name
+                    + "**\n\n"
+                    + description
+                )
+
+        else:
+
+            with col2:
+
+                st.info(
+                    "**"
+                    + name
+                    + "**\n\n"
+                    + description
+                )
 
 
 # ==========================================================
@@ -747,7 +699,7 @@ else:
 
     selected_agent = selected_navigation
 
-    st.title(selected_agent)
+    st.header(selected_agent)
 
     st.write(
         AGENTS[selected_agent]
@@ -766,18 +718,15 @@ else:
         if api_key:
 
             st.success(
-                "🔑 Grok API Mode — Agent connected "
-                "to the Grok reasoning engine."
+                "🔑 Grok API Mode — Agent connected."
             )
 
         else:
 
             st.warning(
-                "⚠️ Add XAI_API_KEY in Streamlit Secrets "
-                "to use Grok API Mode."
+                "⚠️ Add XAI_API_KEY in Streamlit "
+                "Secrets to use Grok API Mode."
             )
-
-    st.divider()
 
     st.subheader("💡 Example Request")
 
@@ -890,7 +839,7 @@ if request:
 
                 response = (
                     "⚠️ **Grok API key is not configured.**\n\n"
-                    "Add the following to Streamlit Secrets:\n\n"
+                    "Please add this to Streamlit Secrets:\n\n"
                     "`XAI_API_KEY = \"YOUR_GROK_API_KEY\"`"
                 )
 
@@ -935,22 +884,7 @@ if request:
 
 st.divider()
 
-st.markdown(
-    """
-    <div style="text-align:center; padding:15px;">
-
-    <strong>🤖 OMNI AI</strong><br>
-
-    Omni-Agentic Intelligent Automation System<br>
-
-    <small>
-    Grok-Powered Multi-Agent AI Solution
-    • 10 Specialized Agents
-    • Demo + API Mode
-    • Streamlit
-    </small>
-
-    </div>
-    """,
-    unsafe_allow_html=True
+st.caption(
+    "🤖 OMNI AI | Omni-Agentic Intelligent Automation System | "
+    "10 AI Agents | Demo + Grok API Mode"
 )
