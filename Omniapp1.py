@@ -318,7 +318,7 @@ def call_grok(request, agent, api_key):
                 "content": request,
             },
         ],
-        "temperature": 0.3,
+        "temperature": 1,
     }
 
     response = requests.post(
