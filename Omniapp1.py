@@ -256,19 +256,35 @@ def detect_agent(request):
 
 
 # ============================================================
-# API KEY
+# AI PROVIDERS / API KEYS
 # ============================================================
 
-def get_api_key():
+def get_secret(name):
+    """Read a Streamlit Secret first, then fall back to environment variables."""
     try:
-        secret_key = st.secrets.get("XAI_API_KEY", "")
-
-        if secret_key:
-            return secret_key
+        value = st.secrets.get(name, "")
+        if value:
+            return str(value).strip()
     except Exception:
         pass
 
-    return os.getenv("XAI_API_KEY", "")
+    return os.getenv(name, "").strip()
+
+
+def get_grok_api_key():
+    return get_secret("XAI_API_KEY")
+
+
+def get_openai_api_key():
+    return get_secret("OPENAI_API_KEY")
+
+
+def get_provider_api_key(provider):
+    if provider == "Grok":
+        return get_grok_api_key()
+    if provider == "OpenAI":
+        return get_openai_api_key()
+    return ""
 
 
 # ============================================================
@@ -289,8 +305,8 @@ def call_grok(request, agent, api_key):
             {
                 "role": "system",
                 "content": (
-                    "You are OMNI AI, a multi-agent intelligent "
-                    "assistant. The selected specialist agent is "
+                    "You are OMNI AI, a multi-agent intelligent assistant. "
+                    "The selected specialist agent is "
                     f"{agent}. "
                     "Respond as part of a multi-agent system. "
                     "Explain which agent should handle the request "
@@ -314,8 +330,7 @@ def call_grok(request, agent, api_key):
 
     if response.status_code != 200:
         raise RuntimeError(
-            f"Grok API Error {response.status_code}: "
-            f"{response.text}"
+            f"Grok API Error {response.status_code}: {response.text}"
         )
 
     data = response.json()
@@ -323,9 +338,121 @@ def call_grok(request, agent, api_key):
     try:
         return data["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError):
+        raise RuntimeError("Unexpected response received from Grok API.")
+
+
+# ============================================================
+# OPENAI API
+# ============================================================
+
+def call_openai(request, agent, api_key):
+    url = "https://api.openai.com/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "gpt-5.6-mini",
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are OMNI AI, a multi-agent intelligent assistant. "
+                    "The selected specialist agent is "
+                    f"{agent}. "
+                    "Respond as part of a multi-agent system. "
+                    "Explain which agent should handle the request "
+                    "and provide a practical structured response."
+                ),
+            },
+            {
+                "role": "user",
+                "content": request,
+            },
+        ],
+        "temperature": 0.3,
+    }
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=90,
+    )
+
+    if response.status_code != 200:
         raise RuntimeError(
-            "Unexpected response received from Grok API."
+            f"OpenAI API Error {response.status_code}: {response.text}"
         )
+
+    data = response.json()
+
+    try:
+        return data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        raise RuntimeError("Unexpected response received from OpenAI API.")
+
+
+# ============================================================
+# UNIFIED AI CALL
+# ============================================================
+
+def call_ai_provider(request, agent, provider, api_key):
+    if provider == "Grok":
+        return call_grok(request, agent, api_key)
+
+    if provider == "OpenAI":
+        return call_openai(request, agent, api_key)
+
+    raise RuntimeError(f"Unsupported AI provider: {provider}")
+
+
+# ============================================================
+# AUTOMATIC API / DEMO FALLBACK
+# ============================================================
+
+def process_with_ai(request, agent, provider, allow_fallback=True):
+    """
+    Use the selected API provider.
+
+    If the key is missing or the API fails and allow_fallback=True,
+    automatically switch to Demo Mode instead of crashing the app.
+    """
+    api_key = get_provider_api_key(provider)
+
+    if not api_key:
+        if allow_fallback:
+            return (
+                demo_response(request, agent),
+                "Demo Mode",
+                f"{provider} API key not configured. Automatically switched to Demo Mode."
+            )
+
+        raise RuntimeError(
+            f"{provider} API key is not configured in Streamlit Secrets."
+        )
+
+    try:
+        result = call_ai_provider(
+            request,
+            agent,
+            provider,
+            api_key,
+        )
+
+        return result, provider, None
+
+    except Exception as exc:
+        if allow_fallback:
+            return (
+                demo_response(request, agent),
+                "Demo Mode",
+                f"{provider} API failed. Automatically switched to Demo Mode. Error: {exc}"
+            )
+
+        raise
 
 
 # ============================================================
@@ -724,21 +851,41 @@ with st.sidebar:
         "Operating Mode",
         [
             "🎮 Demo Mode",
-            "🔑 Grok API Mode",
+            "🔑 API Mode",
         ],
     )
 
-    api_key = get_api_key()
+    if mode == "🔑 API Mode":
+        provider = st.selectbox(
+            "AI Provider",
+            [
+                "Grok",
+                "OpenAI",
+            ],
+            index=0,
+        )
 
-    if mode == "🔑 Grok API Mode":
-        if api_key:
+        selected_api_key = get_provider_api_key(provider)
+
+        if selected_api_key:
             st.success(
-                "🔑 XAI_API_KEY detected."
+                f"🔑 {provider} API key detected."
             )
         else:
             st.warning(
-                "XAI_API_KEY not configured."
+                f"{provider} API key not configured. "
+                "Automatic Demo fallback is enabled."
             )
+
+        st.caption(
+            "Secrets: XAI_API_KEY for Grok • "
+            "OPENAI_API_KEY for OpenAI"
+        )
+    else:
+        provider = "Demo"
+
+    # Compatibility variables used by the rest of the application.
+    api_key = get_provider_api_key(provider) if provider != "Demo" else ""
 
     st.divider()
 
@@ -796,7 +943,7 @@ if page == "🏠 Dashboard":
 
     st.write(
         "Centralized multi-agent AI assistant with "
-        "Demo Mode and Grok API Mode."
+        "Demo Mode, Grok API Mode and OpenAI API Mode."
     )
 
     cols = st.columns(5)
@@ -919,34 +1066,25 @@ elif page == "🧠 AI Orchestrator":
 
             else:
 
-                if not api_key:
-
-                    st.error(
-                        "Add XAI_API_KEY in "
-                        "Streamlit Secrets."
+                with st.spinner(
+                    f"🤖 {provider} is processing..."
+                ):
+                    result, actual_mode, fallback_message = process_with_ai(
+                        request,
+                        agent,
+                        provider,
+                        allow_fallback=True,
                     )
 
+                if fallback_message:
+                    st.warning(f"⚠️ {fallback_message}")
+
+                if actual_mode == "Demo Mode":
+                    st.info("🎮 Response generated in Demo Mode.")
                 else:
+                    st.success(f"🔑 Response generated using {actual_mode} API.")
 
-                    try:
-
-                        with st.spinner(
-                            "🤖 Grok is processing..."
-                        ):
-
-                            result = call_grok(
-                                request,
-                                agent,
-                                api_key,
-                            )
-
-                        st.markdown(result)
-
-                    except Exception as exc:
-
-                        st.error(
-                            f"API Error: {exc}"
-                        )
+                st.markdown(result)
 
     if workflow_button:
 
@@ -1052,32 +1190,23 @@ elif page == "💬 OMNI AI Chatbot":
 
             else:
 
-                if not api_key:
-
-                    answer = (
-                        "⚠️ Grok API mode is selected, "
-                        "but XAI_API_KEY is not configured."
+                with st.spinner(
+                    f"🤖 OMNI AI is thinking with {provider}..."
+                ):
+                    answer, actual_mode, fallback_message = process_with_ai(
+                        user_prompt,
+                        agent,
+                        provider,
+                        allow_fallback=True,
                     )
 
+                if fallback_message:
+                    st.warning(f"⚠️ {fallback_message}")
+
+                if actual_mode == "Demo Mode":
+                    st.info("🎮 Response generated in Demo Mode.")
                 else:
-
-                    try:
-
-                        with st.spinner(
-                            "🤖 OMNI AI is thinking..."
-                        ):
-
-                            answer = call_grok(
-                                user_prompt,
-                                agent,
-                                api_key,
-                            )
-
-                    except Exception as exc:
-
-                        answer = (
-                            f"❌ Grok API Error: {exc}"
-                        )
+                    st.success(f"🔑 Response generated using {actual_mode} API.")
 
             st.markdown(answer)
 
@@ -2395,7 +2524,7 @@ st.caption(
     "🤖 OMNI AI | "
     "Omni-Agentic Intelligent Automation System | "
     "10 AI Agents | "
-    "Demo + Grok API Mode | "
+    "Demo + Grok + OpenAI API Modes | "
     "Streamlit + Python | "
     "No Database Dependency"
 )
