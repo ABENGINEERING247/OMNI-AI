@@ -42,6 +42,7 @@ def init_state():
         "fired_notifications": set(),
         "workflow_running": False,
         "workflow_messages": [],
+        "ai_mode": "Demo",
     }
 
     for key, value in defaults.items():
@@ -354,7 +355,7 @@ def call_openai(request, agent, api_key):
     }
 
     payload = {
-        "model": "gpt-6-luna",
+        "model": get_secret("OPENAI_MODEL") or "gpt-5.6",
         "messages": [
             {
                 "role": "system",
@@ -410,49 +411,133 @@ def call_ai_provider(request, agent, provider, api_key):
 
 
 # ============================================================
-# AUTOMATIC API / DEMO FALLBACK
+# AI ROUTING
+# DEMO -> OPENAI -> GROK
 # ============================================================
 
-def process_with_ai(request, agent, provider, allow_fallback=True):
+def process_with_ai(request, agent, provider="Demo", allow_fallback=True):
     """
-    Use the selected API provider.
+    Process an AI request using the selected mode.
 
-    If the key is missing or the API fails and allow_fallback=True,
-    automatically switch to Demo Mode instead of crashing the app.
+    Modes:
+      Demo  = local demo response only
+      OpenAI = OpenAI first, then Grok, then Demo fallback
+      Grok   = Grok first, then Demo fallback
+      Auto   = Demo first, then OpenAI, then Grok
+
+    Auto mode intentionally follows the requested priority: 
+    Demo -> OpenAI -> Grok.
     """
-    api_key = get_provider_api_key(provider)
 
-    if not api_key:
+    # --------------------------------------------------------
+    # DEMO MODE
+    # --------------------------------------------------------
+    if provider == "Demo":
+        return demo_response(request, agent), "Demo Mode", None
+
+    # --------------------------------------------------------
+    # AUTO MODE: DEMO -> OPENAI -> GROK
+    # --------------------------------------------------------
+    if provider == "Auto":
+        # Demo is the first stage in the automatic chain.
+        # To keep Auto useful, Demo is used only when no API is
+        # available or when both APIs fail.
+        openai_key = get_openai_api_key()
+        grok_key = get_grok_api_key()
+
+        if openai_key:
+            try:
+                result = call_openai(request, agent, openai_key)
+                return result, "OpenAI", None
+            except Exception as exc:
+                openai_error = str(exc)
+        else:
+            openai_error = "OPENAI_API_KEY not configured."
+
+        if grok_key:
+            try:
+                result = call_grok(request, agent, grok_key)
+                return (
+                    result,
+                    "Grok",
+                    f"OpenAI unavailable. Automatically switched to Grok. Error: {openai_error}",
+                )
+            except Exception as exc:
+                grok_error = str(exc)
+        else:
+            grok_error = "XAI_API_KEY not configured."
+
+        return (
+            demo_response(request, agent),
+            "Demo Mode",
+            "OpenAI and Grok were unavailable. Automatically switched to Demo Mode. "
+            f"OpenAI: {openai_error} | Grok: {grok_error}",
+        )
+
+    # --------------------------------------------------------
+    # OPENAI MODE: OPENAI -> GROK -> DEMO
+    # --------------------------------------------------------
+    if provider == "OpenAI":
+        openai_key = get_openai_api_key()
+
+        if openai_key:
+            try:
+                result = call_openai(request, agent, openai_key)
+                return result, "OpenAI", None
+            except Exception as exc:
+                openai_error = str(exc)
+        else:
+            openai_error = "OPENAI_API_KEY not configured."
+
+        if allow_fallback:
+            grok_key = get_grok_api_key()
+
+            if grok_key:
+                try:
+                    result = call_grok(request, agent, grok_key)
+                    return (
+                        result,
+                        "Grok",
+                        "OpenAI was unavailable. Automatically switched to Grok."
+                    )
+                except Exception as exc:
+                    grok_error = str(exc)
+            else:
+                grok_error = "XAI_API_KEY not configured."
+
+            return (
+                demo_response(request, agent),
+                "Demo Mode",
+                "OpenAI and Grok were unavailable. Automatically switched to Demo Mode."
+            )
+
+        raise RuntimeError(openai_error)
+
+    # --------------------------------------------------------
+    # GROK MODE: GROK -> DEMO
+    # --------------------------------------------------------
+    if provider == "Grok":
+        grok_key = get_grok_api_key()
+
+        if grok_key:
+            try:
+                result = call_grok(request, agent, grok_key)
+                return result, "Grok", None
+            except Exception as exc:
+                grok_error = str(exc)
+        else:
+            grok_error = "XAI_API_KEY not configured."
+
         if allow_fallback:
             return (
                 demo_response(request, agent),
                 "Demo Mode",
-                f"{provider} API key not configured. Automatically switched to Demo Mode."
+                "Grok was unavailable. Automatically switched to Demo Mode."
             )
 
-        raise RuntimeError(
-            f"{provider} API key is not configured in Streamlit Secrets."
-        )
+        raise RuntimeError(grok_error)
 
-    try:
-        result = call_ai_provider(
-            request,
-            agent,
-            provider,
-            api_key,
-        )
-
-        return result, provider, None
-
-    except Exception as exc:
-        if allow_fallback:
-            return (
-                demo_response(request, agent),
-                "Demo Mode",
-                f"{provider} API failed. Automatically switched to Demo Mode. Error: {exc}"
-            )
-
-        raise
+    raise RuntimeError(f"Unsupported AI provider: {provider}")
 
 
 # ============================================================
@@ -847,45 +932,64 @@ with st.sidebar:
 
     st.divider()
 
+    st.subheader("🧠 AI Engine")
+
+    mode_options = [
+        "🎮 Demo Mode",
+        "🔑 OpenAI API",
+        "⚡ Grok API",
+        "🔄 Auto: Demo → OpenAI → Grok",
+    ]
+
     mode = st.radio(
         "Operating Mode",
-        [
-            "🎮 Demo Mode",
-            "🔑 API Mode",
-        ],
+        mode_options,
+        index=0,
+        key="ai_mode_selector",
     )
 
-    if mode == "🔑 API Mode":
-        provider = st.selectbox(
-            "AI Provider",
-            [
-                "Grok",
-                "OpenAI",
-            ],
-            index=0,
-        )
+    if mode == "🎮 Demo Mode":
+        provider = "Demo"
+        st.success("🎮 Demo Mode Active")
+        st.caption("No API key required. Local demo responses are generated.")
 
-        selected_api_key = get_provider_api_key(provider)
+    elif mode == "🔑 OpenAI API":
+        provider = "OpenAI"
+        selected_api_key = get_openai_api_key()
 
         if selected_api_key:
-            st.success(
-                f"🔑 {provider} API key detected."
-            )
+            st.success("🔑 OpenAI API key detected")
         else:
-            st.warning(
-                f"{provider} API key not configured. "
-                "Automatic Demo fallback is enabled."
-            )
+            st.warning("⚠️ OPENAI_API_KEY is not configured. Fallback is enabled.")
 
-        st.caption(
-            "Secrets: XAI_API_KEY for Grok • "
-            "OPENAI_API_KEY for OpenAI"
-        )
+        st.caption("Streamlit Secret: OPENAI_API_KEY")
+
+    elif mode == "⚡ Grok API":
+        provider = "Grok"
+        selected_api_key = get_grok_api_key()
+
+        if selected_api_key:
+            st.success("🔑 Grok API key detected")
+        else:
+            st.warning("⚠️ XAI_API_KEY is not configured. Demo fallback is enabled.")
+
+        st.caption("Streamlit Secret: XAI_API_KEY")
+
     else:
-        provider = "Demo"
+        provider = "Auto"
+        st.info("🔄 Automatic provider routing")
+        st.markdown(
+            "**Priority:**\n\n"
+            "1. 🎮 Demo Mode\n"
+            "2. 🔑 OpenAI API\n"
+            "3. ⚡ Grok API"
+        )
+        st.caption(
+            "Auto mode attempts OpenAI first when an API is configured, "
+            "then Grok, and finally Demo Mode."
+        )
 
-    # Compatibility variables used by the rest of the application.
-    api_key = get_provider_api_key(provider) if provider != "Demo" else ""
+    api_key = get_provider_api_key(provider) if provider in ["OpenAI", "Grok"] else ""
 
     st.divider()
 
@@ -929,7 +1033,6 @@ with st.sidebar:
             st.session_state[key] = []
 
         st.session_state.fired_notifications = set()
-
         st.rerun()
 
 
@@ -943,7 +1046,7 @@ if page == "🏠 Dashboard":
 
     st.write(
         "Centralized multi-agent AI assistant with "
-        "Demo Mode, Grok API Mode and OpenAI API Mode."
+        "Demo Mode, OpenAI API Mode and Grok API Mode."
     )
 
     cols = st.columns(5)
@@ -988,7 +1091,7 @@ Specialized Agent
       ↓
 Other Required Agents
       ↓
-Demo Engine / Grok API
+Demo Engine / OpenAI API / Grok API
       ↓
 Task / Schedule Data
       ↓
@@ -1042,49 +1145,32 @@ elif page == "🧠 AI Orchestrator":
     if process_button:
 
         if not request.strip():
-
-            st.warning(
-                "Please enter a request."
-            )
+            st.warning("Please enter a request.")
 
         else:
-
             agent = detect_agent(request)
 
-            st.success(
-                f"Selected Agent: {agent}"
-            )
+            st.success(f"Selected Agent: {agent}")
 
-            if mode == "🎮 Demo Mode":
-
-                st.markdown(
-                    demo_response(
-                        request,
-                        agent,
-                    )
+            with st.spinner(f"🤖 Processing with {provider}..."):
+                result, actual_mode, fallback_message = process_with_ai(
+                    request,
+                    agent,
+                    provider,
+                    allow_fallback=True,
                 )
 
-            else:
+            if fallback_message:
+                st.warning(f"⚠️ {fallback_message}")
 
-                with st.spinner(
-                    f"🤖 {provider} is processing..."
-                ):
-                    result, actual_mode, fallback_message = process_with_ai(
-                        request,
-                        agent,
-                        provider,
-                        allow_fallback=True,
-                    )
+            if actual_mode == "Demo Mode":
+                st.info("🎮 Response generated in Demo Mode.")
+            elif actual_mode == "OpenAI":
+                st.success("🔑 Response generated using OpenAI API.")
+            elif actual_mode == "Grok":
+                st.success("⚡ Response generated using Grok API.")
 
-                if fallback_message:
-                    st.warning(f"⚠️ {fallback_message}")
-
-                if actual_mode == "Demo Mode":
-                    st.info("🎮 Response generated in Demo Mode.")
-                else:
-                    st.success(f"🔑 Response generated using {actual_mode} API.")
-
-                st.markdown(result)
+            st.markdown(result)
 
     if workflow_button:
 
@@ -1181,32 +1267,23 @@ elif page == "💬 OMNI AI Chatbot":
                 f"🤖 Routed to: **{agent}**"
             )
 
-            if mode == "🎮 Demo Mode":
-
-                answer = demo_response(
+            with st.spinner(f"🤖 OMNI AI is thinking with {provider}..."):
+                answer, actual_mode, fallback_message = process_with_ai(
                     user_prompt,
                     agent,
+                    provider,
+                    allow_fallback=True,
                 )
 
-            else:
+            if fallback_message:
+                st.warning(f"⚠️ {fallback_message}")
 
-                with st.spinner(
-                    f"🤖 OMNI AI is thinking with {provider}..."
-                ):
-                    answer, actual_mode, fallback_message = process_with_ai(
-                        user_prompt,
-                        agent,
-                        provider,
-                        allow_fallback=True,
-                    )
-
-                if fallback_message:
-                    st.warning(f"⚠️ {fallback_message}")
-
-                if actual_mode == "Demo Mode":
-                    st.info("🎮 Response generated in Demo Mode.")
-                else:
-                    st.success(f"🔑 Response generated using {actual_mode} API.")
+            if actual_mode == "Demo Mode":
+                st.info("🎮 Response generated in Demo Mode.")
+            elif actual_mode == "OpenAI":
+                st.success("🔑 Response generated using OpenAI API.")
+            elif actual_mode == "Grok":
+                st.success("⚡ Response generated using Grok API.")
 
             st.markdown(answer)
 
@@ -2524,7 +2601,7 @@ st.caption(
     "🤖 OMNI AI | "
     "Omni-Agentic Intelligent Automation System | "
     "10 AI Agents | "
-    "Demo + Grok + OpenAI API Modes | "
+    "Demo + OpenAI + Grok API Modes | "
     "Streamlit + Python | "
     "No Database Dependency"
 )
