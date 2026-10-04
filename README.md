@@ -4,7 +4,7 @@
 
 OMNI AI is a Streamlit-based multi-agent intelligent automation platform designed to demonstrate how a central **AI Orchestrator** can communicate with and route requests to specialized AI agents.
 
-The system supports both **Demo Mode** and **Grok API Mode**, allowing users to test the complete agentic workflow without an API key and then connect the application to Grok AI when an `XAI_API_KEY` is available.
+The system supports both **Demo Mode** and **Open AI or Grok API Mode**, allowing users to test the complete agentic workflow without an API key and then connect the application to Grok AI when an `XAI_API_KEY` is available.
 
 ---
 
@@ -70,7 +70,7 @@ OMNI AI demonstrates the following workflow:
                       ▼
              ┌─────────────────┐
              │ Demo Engine /   │
-             │    Grok API     │
+             │ OpenAI/Grok API │
              └────────┬────────┘
                       │
                       ▼
@@ -133,7 +133,7 @@ Notification
 
 ---
 
-# 🔑 Grok API Mode
+# 🔑 Open AI or Grok API Mode
 
 Grok API Mode connects OMNI AI to the xAI API.
 
@@ -148,7 +148,7 @@ Agent Detection
      ↓
 Selected Specialist Agent
      ↓
-Grok API
+Open AI or Grok API
      ↓
 AI Response
      ↓
@@ -898,5 +898,5 @@ Database Dependency   ❌
 Built with:
 
 ```text
-Python + Streamlit + Grok API
+Python + Streamlit + Open AI or Grok API
 ```
