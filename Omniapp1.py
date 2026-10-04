@@ -354,7 +354,7 @@ def call_openai(request, agent, api_key):
     }
 
     payload = {
-        "model": "gpt-5.6-mini",
+        "model": "gpt-6-luna",
         "messages": [
             {
                 "role": "system",
