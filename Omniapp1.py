@@ -1,8 +1,23 @@
 import os
+import io
 from datetime import date, time, datetime
 
 import requests
 import streamlit as st
+
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    REPORTLAB_AVAILABLE = True
+except Exception:
+    REPORTLAB_AVAILABLE = False
+
+try:
+    from docx import Document
+    DOCX_AVAILABLE = True
+except Exception:
+    DOCX_AVAILABLE = False
 
 try:
     from streamlit_autorefresh import st_autorefresh
@@ -94,6 +109,59 @@ def delete_item(collection_name, index):
         st.session_state[collection_name] = items
 
     st.rerun()
+
+
+# ============================================================
+# DOCUMENT GENERATION HELPERS (PDF & DOCX)
+# ============================================================
+
+def generate_pdf_report(title, chat_history):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+    styles = getSampleStyleSheet()
+    story = []
+
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        spaceAfter=15,
+        textColor=colors_helper(0) if 'colors_helper' in globals() else None
+    )
+    
+    story.append(Paragraph(f"<b>{title} - Chat Transcript</b>", styles['Heading1']))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    story.append(Spacer(1, 15))
+
+    for msg in chat_history:
+        role = "User" if msg["role"] == "user" else "Assistant"
+        content = msg["content"].replace("\n", "<br/>")
+        p_text = f"<b>{role}:</b> {content}"
+        story.append(Paragraph(p_text, styles['Normal']))
+        story.append(Spacer(1, 8))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+def generate_docx_report(title, chat_history):
+    doc = Document()
+    doc.add_heading(f"{title} - Chat Transcript", level=1)
+    doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    doc.add_paragraph("-" * 40)
+
+    for msg in chat_history:
+        role = "User" if msg["role"] == "user" else "Assistant"
+        doc.add_heading(role, level=3)
+        doc.add_paragraph(msg["content"])
+        doc.add_paragraph()
+
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 # ============================================================
@@ -483,12 +551,12 @@ def demo_response(request, agent):
 
 
 # ============================================================
-# DEDICATED MODULE CHATBOT WIDGET (TOP POSITION)
+# DEDICATED MODULE CHATBOT WIDGET WITH PDF & DOCX EXPORT
 # ============================================================
 
 def render_dedicated_chatbot(module_key, agent_name, provider, mode):
-    """Renders a persistent dedicated chatbot at the top of specific navigation modules."""
-    with st.expander(f"💬 Chat with {agent_name} (Dedicated Assistant)", expanded=False):
+    """Renders a persistent dedicated chatbot with PDF/DOCX exporters at the top of specific navigation modules."""
+    with st.expander(f"💬 Chat with {agent_name} (Dedicated Assistant & Document Generator)", expanded=False):
         st.caption(f"This assistant is restricted and talks only about topics related to **{agent_name}**.")
         
         if module_key not in st.session_state.module_chats:
@@ -521,9 +589,41 @@ def render_dedicated_chatbot(module_key, agent_name, provider, mode):
                 
             chat_history.append({"role": "assistant", "content": answer})
             
-        if st.button("🗑️ Clear Module Chat", key=f"clear_chat_{module_key}"):
-            st.session_state.module_chats[module_key] = []
-            st.rerun()
+        # Export & Clear Controls
+        if chat_history:
+            st.divider()
+            col_ex1, col_ex2, col_ex3 = st.columns(3)
+            
+            with col_ex1:
+                if REPORTLAB_AVAILABLE:
+                    pdf_bytes = generate_pdf_report(agent_name, chat_history)
+                    st.download_button(
+                        "📥 Export Chat as PDF",
+                        data=pdf_bytes,
+                        file_name=f"{module_key}_chat_transcript.pdf",
+                        mime="application/pdf",
+                        key=f"dl_pdf_{module_key}"
+                    )
+                else:
+                    st.caption("PDF Export unavailable (reportlab missing)")
+
+            with col_ex2:
+                if DOCX_AVAILABLE:
+                    docx_bytes = generate_docx_report(agent_name, chat_history)
+                    st.download_button(
+                        "📥 Export Chat as DOCX",
+                        data=docx_bytes,
+                        file_name=f"{module_key}_chat_transcript.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key=f"dl_docx_{module_key}"
+                    )
+                else:
+                    st.caption("DOCX Export unavailable (python-docx missing)")
+
+            with col_ex3:
+                if st.button("🗑️ Clear Chat", key=f"clear_chat_{module_key}"):
+                    st.session_state.module_chats[module_key] = []
+                    st.rerun()
     st.divider()
 
 
@@ -1266,15 +1366,35 @@ elif page == "💬 OMNI AI Chatbot":
             }
         )
 
-    if st.button(
-        "🗑️ Clear Chat",
-        use_container_width=True,
-        key="clear_omni_chat_btn"
-    ):
-
-        st.session_state.chat_history = []
-
-        st.rerun()
+    if st.session_state.chat_history:
+        st.divider()
+        col_c1, col_c2, col_c3 = st.columns(3)
+        with col_c1:
+            if REPORTLAB_AVAILABLE:
+                st.download_button(
+                    "📥 Export Chat as PDF",
+                    data=generate_pdf_report("OMNI AI Chatbot", st.session_state.chat_history),
+                    file_name="omni_ai_main_chat.pdf",
+                    mime="application/pdf",
+                    key="dl_main_pdf"
+                )
+        with col_c2:
+            if DOCX_AVAILABLE:
+                st.download_button(
+                    "📥 Export Chat as DOCX",
+                    data=generate_docx_report("OMNI AI Chatbot", st.session_state.chat_history),
+                    file_name="omni_ai_main_chat.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="dl_main_docx"
+                )
+        with col_c3:
+            if st.button(
+                "🗑️ Clear Chat",
+                use_container_width=True,
+                key="clear_omni_chat_btn"
+            ):
+                st.session_state.chat_history = []
+                st.rerun()
 
 
 # ============================================================
