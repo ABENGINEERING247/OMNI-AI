@@ -483,12 +483,11 @@ def demo_response(request, agent):
 
 
 # ============================================================
-# DEDICATED MODULE CHATBOT WIDGET
+# DEDICATED MODULE CHATBOT WIDGET (TOP POSITION)
 # ============================================================
 
 def render_dedicated_chatbot(module_key, agent_name, provider, mode):
-    """Renders a persistent dedicated chatbot inside specific navigation modules."""
-    st.divider()
+    """Renders a persistent dedicated chatbot at the top of specific navigation modules."""
     with st.expander(f"💬 Chat with {agent_name} (Dedicated Assistant)", expanded=False):
         st.caption(f"This assistant is restricted and talks only about topics related to **{agent_name}**.")
         
@@ -525,6 +524,7 @@ def render_dedicated_chatbot(module_key, agent_name, provider, mode):
         if st.button("🗑️ Clear Module Chat", key=f"clear_chat_{module_key}"):
             st.session_state.module_chats[module_key] = []
             st.rerun()
+    st.divider()
 
 
 # ============================================================
@@ -950,6 +950,7 @@ with st.sidebar:
 if page == "🏠 Dashboard":
 
     st.header("📊 OMNI AI Dashboard")
+    render_dedicated_chatbot("Dashboard", "🧠 AI Orchestrator", provider, mode)
 
     st.write(
         "Centralized multi-agent AI assistant with "
@@ -1014,8 +1015,6 @@ User""",
         st.info(
             f"**{name}** — {description}"
         )
-
-    render_dedicated_chatbot("Dashboard", "🧠 AI Orchestrator", provider, mode)
 
 
 # ============================================================
@@ -1287,6 +1286,7 @@ elif page == "⏰ Reminders & Alarms":
     st.header(
         "⏰ Daily Reminder Agent"
     )
+    render_dedicated_chatbot("Reminders", "⏰ Daily Reminder Agent", provider, mode)
 
     with st.form("reminder_form"):
 
@@ -1397,8 +1397,6 @@ elif page == "⏰ Reminders & Alarms":
                 i,
             )
 
-    render_dedicated_chatbot("Reminders", "⏰ Daily Reminder Agent", provider, mode)
-
 
 # ============================================================
 # CALENDAR
@@ -1409,6 +1407,7 @@ elif page == "📅 Calendar & Meetings":
     st.header(
         "📅 Calendar & Schedule Agent"
     )
+    render_dedicated_chatbot("Calendar", "📅 Calendar & Schedule Agent", provider, mode)
 
     with st.form("meeting_form"):
 
@@ -1523,8 +1522,6 @@ elif page == "📅 Calendar & Meetings":
                 i,
             )
 
-    render_dedicated_chatbot("Calendar", "📅 Calendar & Schedule Agent", provider, mode)
-
 
 # ============================================================
 # LEARNING
@@ -1535,6 +1532,7 @@ elif page == "📚 Learning":
     st.header(
         "📚 Learning & Education Agent"
     )
+    render_dedicated_chatbot("Learning", "📚 Learning & Education Agent", provider, mode)
 
     with st.form("learning_form"):
 
@@ -1621,8 +1619,6 @@ elif page == "📚 Learning":
                 i,
             )
 
-    render_dedicated_chatbot("Learning", "📚 Learning & Education Agent", provider, mode)
-
 
 # ============================================================
 # TASKS
@@ -1633,6 +1629,7 @@ elif page == "📝 Tasks & Productivity":
     st.header(
         "📝 Productivity & Task Management Agent"
     )
+    render_dedicated_chatbot("Tasks", "📝 Productivity & Task Agent", provider, mode)
 
     with st.form("task_form"):
 
@@ -1737,8 +1734,6 @@ elif page == "📝 Tasks & Productivity":
                 i,
             )
 
-    render_dedicated_chatbot("Tasks", "📝 Productivity & Task Agent", provider, mode)
-
 
 # ============================================================
 # WELLNESS
@@ -1749,6 +1744,7 @@ elif page == "❤️ Wellness":
     st.header(
         "❤️ Health & Wellness Agent"
     )
+    render_dedicated_chatbot("Wellness", "❤️ Health & Wellness Agent", provider, mode)
 
     with st.form("wellness_form"):
 
@@ -1843,8 +1839,6 @@ elif page == "❤️ Wellness":
                 i,
             )
 
-    render_dedicated_chatbot("Wellness", "❤️ Health & Wellness Agent", provider, mode)
-
 
 # ============================================================
 # FINANCE
@@ -1855,6 +1849,7 @@ elif page == "💰 Finance":
     st.header(
         "💰 Finance & Expense Management Agent"
     )
+    render_dedicated_chatbot("Finance", "💰 Finance & Expense Agent", provider, mode)
 
     with st.form("finance_form"):
 
@@ -1981,8 +1976,6 @@ elif page == "💰 Finance":
                 i,
             )
 
-    render_dedicated_chatbot("Finance", "💰 Finance & Expense Agent", provider, mode)
-
 
 # ============================================================
 # COMMUNICATION
@@ -1993,6 +1986,7 @@ elif page == "🌐 Communication":
     st.header(
         "🌐 Information & Communication Agent"
     )
+    render_dedicated_chatbot("Communication", "🌐 Information & Communication Agent", provider, mode)
 
     content_type = st.selectbox(
         "Content Type",
@@ -2124,8 +2118,6 @@ elif page == "🌐 Communication":
                 i,
             )
 
-    render_dedicated_chatbot("Communication", "🌐 Information & Communication Agent", provider, mode)
-
 
 # ============================================================
 # ROBOTICS
@@ -2136,6 +2128,7 @@ elif page == "🤖 Robotics":
     st.header(
         "🤖 Robotics Agent"
     )
+    render_dedicated_chatbot("Robotics", "🤖 Robotics Agent", provider, mode)
 
     controllers = [
         "Arduino Uno",
@@ -2403,8 +2396,6 @@ elif page == "🤖 Robotics":
                 i,
             )
 
-    render_dedicated_chatbot("Robotics", "🤖 Robotics Agent", provider, mode)
-
 
 # ============================================================
 # DRONES
@@ -2415,6 +2406,7 @@ elif page == "🚁 Drones & Autonomous":
     st.header(
         "🚁 Drones & Autonomous Systems Agent"
     )
+    render_dedicated_chatbot("Drones", "🚁 Drones & Autonomous Systems Agent", provider, mode)
 
     platforms = [
         "Quadcopter",
@@ -2579,8 +2571,6 @@ elif page == "🚁 Drones & Autonomous":
                 "drones",
                 i,
             )
-
-    render_dedicated_chatbot("Drones", "🚁 Drones & Autonomous Systems Agent", provider, mode)
 
 
 # ============================================================
