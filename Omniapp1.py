@@ -50,6 +50,7 @@ def init_state():
         "fired_notifications": set(),
         "workflow_running": False,
         "workflow_messages": [],
+        "orchestrator_result": "",  # Persistent result storage
     }
 
     for key, value in defaults.items():
@@ -138,7 +139,6 @@ def generate_pdf_bytes(chat_title, chat_history):
         'ReportMeta',
         parent=styles['Normal'],
         fontSize=10,
-        textColor=colors_HexColor("#666666") if 'colors_HexColor' in globals() else styles['Normal'].textColor,
         spaceAfter=18
     )
 
@@ -165,7 +165,6 @@ def generate_pdf_bytes(chat_title, chat_history):
         role_label = "<b>User</b>" if msg["role"] == "user" else "<b>OMNI AI Agent</b>"
         story.append(Paragraph(role_label, role_style))
         
-        # Clean plain text for reportlab paragraph safely
         content_text = str(msg["content"]).replace("\n", "<br/>")
         story.append(Paragraph(content_text, body_style))
         story.append(Spacer(1, 6))
@@ -205,31 +204,32 @@ def show_orchestrator_popup():
 
 
 # ============================================================
-# HEADER
+# REUSABLE HEADER COMPONENT
 # ============================================================
 
-header_col1, header_col2, header_col3 = st.columns(
-    [3, 1, 1],
-    vertical_alignment="center"
-)
-
-with header_col1:
-    st.title("🤖 OMNI AI")
-    st.subheader("Omni-Agentic Intelligent Automation System")
-    st.caption(
-        "Multi-Agent AI • Daily Automation • Productivity • "
-        "Robotics • Autonomous Systems"
+def render_omni_header(page_key="default"):
+    header_col1, header_col2, header_col3 = st.columns(
+        [3, 1, 1],
+        vertical_alignment="center"
     )
 
-with header_col2:
-    st.metric("AI Agents", "10")
+    with header_col1:
+        st.title("🤖 OMNI AI")
+        st.subheader("Omni-Agentic Intelligent Automation System")
+        st.caption(
+            "Multi-Agent AI • Daily Automation • Productivity • "
+            "Robotics • Autonomous Systems"
+        )
 
-with header_col3:
-    st.write("")
-    if st.button("🤖 Orchestrator Info", use_container_width=True):
-        show_orchestrator_popup()
+    with header_col2:
+        st.metric("AI Agents", "10")
 
-st.divider()
+    with header_col3:
+        st.write("")
+        if st.button("🤖 Orchestrator Info", use_container_width=True, key=f"header_btn_{page_key}"):
+            show_orchestrator_popup()
+
+    st.divider()
 
 
 # ============================================================
@@ -274,7 +274,6 @@ AGENTS = {
 # ============================================================
 
 def render_dedicated_chatbot(module_key, agent_name, agent_description):
-    """Renders an interactive chat interface scoped strictly to a dedicated agent with Export options."""
     with st.expander(f"💬 Talk to {agent_name} (Dedicated Assistant)", expanded=False):
         st.caption(f"**Agent Objective:** {agent_description}")
         
@@ -322,7 +321,6 @@ def render_dedicated_chatbot(module_key, agent_name, agent_description):
             chat_history.append({"role": "assistant", "content": response_text})
             st.rerun()
 
-        # Export and Clear Controls
         if chat_history:
             st.divider()
             col_exp1, col_exp2, col_exp3 = st.columns(3)
@@ -463,7 +461,6 @@ def detect_agent(request):
 # ============================================================
 
 def get_secret(name):
-    """Read a Streamlit Secret first, then fall back to environment variables."""
     try:
         value = st.secrets.get(name, "")
         if value:
@@ -958,6 +955,7 @@ with st.sidebar:
 # ============================================================
 
 if page == "🏠 Dashboard":
+    render_omni_header("dashboard")
     st.header("📊 OMNI AI Dashboard")
     st.write(
         "Centralized multi-agent AI assistant with "
@@ -989,6 +987,7 @@ if page == "🏠 Dashboard":
 # ============================================================
 
 elif page == "🧠 AI Orchestrator":
+    render_omni_header("orchestrator")
     st.header("🧠 AI Orchestrator / Master Agent")
 
     render_dedicated_chatbot(
@@ -1014,21 +1013,30 @@ elif page == "🧠 AI Orchestrator":
             st.warning("Please enter a request.")
         else:
             agent = detect_agent(request)
-            st.success(f"Selected Agent: {agent}")
-
+            
             if mode == "🎮 Demo Mode":
-                st.markdown(demo_response(request, agent))
+                result = demo_response(request, agent)
             else:
                 with st.spinner(f"🤖 {provider} is processing..."):
                     result, actual_mode, fallback_message = process_with_ai(
                         request, agent, provider, allow_fallback=True
                     )
                 if fallback_message:
-                    st.warning(f"⚠️ {fallback_message}")
-                st.markdown(result)
+                    result = f"⚠️ {fallback_message}\n\n" + result
+
+            # Save result to session state to prevent vanishing in seconds
+            st.session_state.orchestrator_result = f"### Selected Agent: {agent}\n\n" + result
 
     if workflow_button:
         run_demo_workflow(request)
+
+    # Persistent Output Rendering
+    if st.session_state.orchestrator_result:
+        st.divider()
+        st.markdown(st.session_state.orchestrator_result)
+        if st.button("🗑️ Clear Result"):
+            st.session_state.orchestrator_result = ""
+            st.rerun()
 
 
 # ============================================================
@@ -1036,6 +1044,7 @@ elif page == "🧠 AI Orchestrator":
 # ============================================================
 
 elif page == "🔄 Agent Workflow Demo":
+    render_omni_header("workflow")
     st.header("🔄 OMNI AI Multi-Agent Workflow Demo")
     
     render_dedicated_chatbot(
@@ -1059,6 +1068,7 @@ elif page == "🔄 Agent Workflow Demo":
 # ============================================================
 
 elif page == "💬 OMNI AI Chatbot":
+    render_omni_header("chatbot")
     st.header("💬 OMNI AI Multi-Agent Chatbot")
     st.caption("Chat with the OMNI AI Orchestrator and route requests to specialist agents.")
 
@@ -1093,7 +1103,6 @@ elif page == "💬 OMNI AI Chatbot":
 
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
 
-    # Export & Clear Controls for Main Chatbot
     if st.session_state.chat_history:
         st.divider()
         col_m1, col_m2, col_m3 = st.columns(3)
@@ -1124,6 +1133,7 @@ elif page == "💬 OMNI AI Chatbot":
 # ============================================================
 
 elif page == "⏰ Reminders & Alarms":
+    render_omni_header("reminders")
     st.header("⏰ Daily Reminder Agent")
     
     render_dedicated_chatbot(
@@ -1179,6 +1189,7 @@ elif page == "⏰ Reminders & Alarms":
 # ============================================================
 
 elif page == "📅 Calendar & Meetings":
+    render_omni_header("calendar")
     st.header("📅 Calendar & Schedule Agent")
     
     render_dedicated_chatbot(
@@ -1236,6 +1247,7 @@ elif page == "📅 Calendar & Meetings":
 # ============================================================
 
 elif page == "📚 Learning":
+    render_omni_header("learning")
     st.header("📚 Learning & Education Agent")
     
     render_dedicated_chatbot(
@@ -1286,6 +1298,7 @@ elif page == "📚 Learning":
 # ============================================================
 
 elif page == "📝 Tasks & Productivity":
+    render_omni_header("tasks")
     st.header("📝 Productivity & Task Management Agent")
     
     render_dedicated_chatbot(
@@ -1342,6 +1355,7 @@ elif page == "📝 Tasks & Productivity":
 # ============================================================
 
 elif page == "❤️ Wellness":
+    render_omni_header("wellness")
     st.header("❤️ Health & Wellness Agent")
     
     render_dedicated_chatbot(
@@ -1392,6 +1406,7 @@ elif page == "❤️ Wellness":
 # ============================================================
 
 elif page == "💰 Finance":
+    render_omni_header("finance")
     st.header("💰 Finance & Expense Management Agent")
     
     render_dedicated_chatbot(
@@ -1448,6 +1463,7 @@ elif page == "💰 Finance":
 # ============================================================
 
 elif page == "🌐 Communication":
+    render_omni_header("communication")
     st.header("🌐 Information & Communication Agent")
     
     render_dedicated_chatbot(
@@ -1505,6 +1521,7 @@ elif page == "🌐 Communication":
 # ============================================================
 
 elif page == "🤖 Robotics":
+    render_omni_header("robotics")
     st.header("🤖 Robotics Agent")
     
     render_dedicated_chatbot(
@@ -1617,6 +1634,7 @@ elif page == "🤖 Robotics":
 # ============================================================
 
 elif page == "🚁 Drones & Autonomous":
+    render_omni_header("drones")
     st.header("🚁 Drones & Autonomous Systems Agent")
     
     render_dedicated_chatbot(
