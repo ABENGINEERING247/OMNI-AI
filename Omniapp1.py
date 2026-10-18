@@ -39,6 +39,7 @@ def init_state():
         "robotics": [],
         "drones": [],
         "chat_history": [],
+        "module_chats": {},  # Stores isolated chat histories per page module
         "fired_notifications": set(),
         "workflow_running": False,
         "workflow_messages": [],
@@ -308,9 +309,8 @@ def call_grok(request, agent, api_key):
                     "You are OMNI AI, a multi-agent intelligent assistant. "
                     "The selected specialist agent is "
                     f"{agent}. "
-                    "Respond as part of a multi-agent system. "
-                    "Explain which agent should handle the request "
-                    "and provide a practical structured response."
+                    "Respond strictly as this specialist agent and answer only queries related to your dedicated domain. "
+                    "Provide a practical structured response."
                 ),
             },
             {
@@ -362,9 +362,8 @@ def call_openai(request, agent, api_key):
                     "You are OMNI AI, a multi-agent intelligent assistant. "
                     "The selected specialist agent is "
                     f"{agent}. "
-                    "Respond as part of a multi-agent system. "
-                    "Explain which agent should handle the request "
-                    "and provide a practical structured response."
+                    "Respond strictly as this specialist agent and answer only queries related to your dedicated domain. "
+                    "Provide a practical structured response."
                 ),
             },
             {
@@ -466,85 +465,60 @@ def demo_response(request, agent):
     )
 
     return (
-        f"## {agent}\n\n"
-        f"**Request:** {request}\n\n"
-        "### Demo Processing\n\n"
-        "1. Request received\n"
-        "2. Intent analyzed\n"
-        f"3. **{agent}** selected\n"
-        "4. Specialist workflow executed\n"
-        "5. Structured response generated\n\n"
-        "### Agent Role\n\n"
+        f"## {agent} (Dedicated Specialist)\n\n"
+        f"**Query:** {request}\n\n"
+        "### Specialist Processing\n\n"
+        "1. Request received by dedicated agent\n"
+        f"2. Handled exclusively within **{agent}** scope\n"
+        "3. Structured domain response generated\n\n"
+        "### Agent Role Description\n\n"
         f"{description}\n\n"
-        "🟢 **Agent Status: Active**"
+        "🟢 **Agent Status: Active & Dedicated**"
     )
 
 
 # ============================================================
-# DEDICATED SECTION CHATBOT HELPER
+# DEDICATED MODULE CHATBOT WIDGET
 # ============================================================
 
-def render_section_chatbot(section_key, agent_name, provider, mode):
-    """
-    Renders a dedicated chatbot widget scoped specifically to the provided agent.
-    Maintains a separate history key in session_state per section.
-    """
-    history_key = f"chat_history_{section_key}"
-    if history_key not in st.session_state:
-        st.session_state[history_key] = []
-
-    with st.expander(f"💬 Chat with {agent_name}", expanded=False):
-        st.caption(f"This chat communicates strictly with the **{agent_name}**.")
-
-        if st.session_state[history_key]:
-            for message in st.session_state[history_key]:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-
-        user_prompt = st.chat_input(f"Ask the {agent_name}...", key=f"input_{section_key}")
-
+def render_dedicated_chatbot(module_key, agent_name, provider, mode):
+    """Renders a persistent dedicated chatbot inside specific navigation modules."""
+    st.divider()
+    with st.expander(f"💬 Chat with {agent_name} (Dedicated Assistant)", expanded=False):
+        st.caption(f"This assistant is restricted and talks only about topics related to **{agent_name}**.")
+        
+        if module_key not in st.session_state.module_chats:
+            st.session_state.module_chats[module_key] = []
+            
+        chat_history = st.session_state.module_chats[module_key]
+        
+        for message in chat_history:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+                
+        user_prompt = st.chat_input(f"Ask {agent_name} a question...", key=f"chat_input_{module_key}")
+        
         if user_prompt:
-            st.session_state[history_key].append(
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                }
-            )
-
+            chat_history.append({"role": "user", "content": user_prompt})
             with st.chat_message("user"):
                 st.markdown(user_prompt)
-
+                
             with st.chat_message("assistant"):
-                if mode == "🎮 Demo Mode":
-                    answer = demo_response(user_prompt, agent_name)
-                else:
-                    with st.spinner(f"🤖 {agent_name} is processing with {provider}..."):
-                        answer, actual_mode, fallback_message = process_with_ai(
-                            user_prompt,
-                            agent_name,
-                            provider,
-                            allow_fallback=True,
-                        )
-
-                    if fallback_message:
-                        st.warning(f"⚠️ {fallback_message}")
-
-                    if actual_mode == "Demo Mode":
-                        st.info("🎮 Response generated in Demo Mode.")
+                with st.spinner(f"{agent_name} is processing..."):
+                    if mode == "🎮 Demo Mode":
+                        answer = demo_response(user_prompt, agent_name)
                     else:
-                        st.success(f"🔑 Response generated using {actual_mode} API.")
-
+                        answer, actual_mode, fallback_message = process_with_ai(
+                            user_prompt, agent_name, provider, allow_fallback=True
+                        )
+                        if fallback_message:
+                            st.warning(f"⚠️ {fallback_message}")
                 st.markdown(answer)
-
-            st.session_state[history_key].append(
-                {
-                    "role": "assistant",
-                    "content": answer,
-                }
-            )
-
-        if st.button("🗑️ Clear Section Chat", key=f"clear_{section_key}"):
-            st.session_state[history_key] = []
+                
+            chat_history.append({"role": "assistant", "content": answer})
+            
+        if st.button("🗑️ Clear Module Chat", key=f"clear_chat_{module_key}"):
+            st.session_state.module_chats[module_key] = []
             st.rerun()
 
 
@@ -1014,10 +988,6 @@ if page == "🏠 Dashboard":
         "Demo Mode, Grok API Mode and OpenAI API Mode."
     )
 
-    # Dedicated Chatbot for Dashboard (connected to AI Orchestrator or general dashboard agent)
-    render_section_chatbot("dashboard", "🧠 AI Orchestrator", provider, mode)
-    st.divider()
-
     cols = st.columns(5)
 
     cols[0].metric(
@@ -1076,6 +1046,8 @@ User""",
         st.info(
             f"**{name}** — {description}"
         )
+
+    render_dedicated_chatbot("Dashboard", "🧠 AI Orchestrator", provider, mode)
 
 
 # ============================================================
@@ -1309,9 +1281,6 @@ elif page == "⏰ Reminders & Alarms":
         "⏰ Daily Reminder Agent"
     )
 
-    render_section_chatbot("reminders", "⏰ Daily Reminder Agent", provider, mode)
-    st.divider()
-
     with st.form("reminder_form"):
 
         title = st.text_input(
@@ -1421,6 +1390,8 @@ elif page == "⏰ Reminders & Alarms":
                 i,
             )
 
+    render_dedicated_chatbot("Reminders", "⏰ Daily Reminder Agent", provider, mode)
+
 
 # ============================================================
 # CALENDAR
@@ -1431,9 +1402,6 @@ elif page == "📅 Calendar & Meetings":
     st.header(
         "📅 Calendar & Schedule Agent"
     )
-
-    render_section_chatbot("calendar", "📅 Calendar & Schedule Agent", provider, mode)
-    st.divider()
 
     with st.form("meeting_form"):
 
@@ -1548,6 +1516,8 @@ elif page == "📅 Calendar & Meetings":
                 i,
             )
 
+    render_dedicated_chatbot("Calendar", "📅 Calendar & Schedule Agent", provider, mode)
+
 
 # ============================================================
 # LEARNING
@@ -1558,9 +1528,6 @@ elif page == "📚 Learning":
     st.header(
         "📚 Learning & Education Agent"
     )
-
-    render_section_chatbot("learning", "📚 Learning & Education Agent", provider, mode)
-    st.divider()
 
     with st.form("learning_form"):
 
@@ -1647,6 +1614,8 @@ elif page == "📚 Learning":
                 i,
             )
 
+    render_dedicated_chatbot("Learning", "📚 Learning & Education Agent", provider, mode)
+
 
 # ============================================================
 # TASKS
@@ -1657,9 +1626,6 @@ elif page == "📝 Tasks & Productivity":
     st.header(
         "📝 Productivity & Task Management Agent"
     )
-
-    render_section_chatbot("tasks", "📝 Productivity & Task Agent", provider, mode)
-    st.divider()
 
     with st.form("task_form"):
 
@@ -1764,6 +1730,8 @@ elif page == "📝 Tasks & Productivity":
                 i,
             )
 
+    render_dedicated_chatbot("Tasks", "📝 Productivity & Task Agent", provider, mode)
+
 
 # ============================================================
 # WELLNESS
@@ -1774,9 +1742,6 @@ elif page == "❤️ Wellness":
     st.header(
         "❤️ Health & Wellness Agent"
     )
-
-    render_section_chatbot("wellness", "❤️ Health & Wellness Agent", provider, mode)
-    st.divider()
 
     with st.form("wellness_form"):
 
@@ -1871,6 +1836,8 @@ elif page == "❤️ Wellness":
                 i,
             )
 
+    render_dedicated_chatbot("Wellness", "❤️ Health & Wellness Agent", provider, mode)
+
 
 # ============================================================
 # FINANCE
@@ -1881,9 +1848,6 @@ elif page == "💰 Finance":
     st.header(
         "💰 Finance & Expense Management Agent"
     )
-
-    render_section_chatbot("finance", "💰 Finance & Expense Agent", provider, mode)
-    st.divider()
 
     with st.form("finance_form"):
 
@@ -2010,6 +1974,8 @@ elif page == "💰 Finance":
                 i,
             )
 
+    render_dedicated_chatbot("Finance", "💰 Finance & Expense Agent", provider, mode)
+
 
 # ============================================================
 # COMMUNICATION
@@ -2020,9 +1986,6 @@ elif page == "🌐 Communication":
     st.header(
         "🌐 Information & Communication Agent"
     )
-
-    render_section_chatbot("communication", "🌐 Information & Communication Agent", provider, mode)
-    st.divider()
 
     content_type = st.selectbox(
         "Content Type",
@@ -2154,6 +2117,8 @@ elif page == "🌐 Communication":
                 i,
             )
 
+    render_dedicated_chatbot("Communication", "🌐 Information & Communication Agent", provider, mode)
+
 
 # ============================================================
 # ROBOTICS
@@ -2164,9 +2129,6 @@ elif page == "🤖 Robotics":
     st.header(
         "🤖 Robotics Agent"
     )
-
-    render_section_chatbot("robotics", "🤖 Robotics Agent", provider, mode)
-    st.divider()
 
     controllers = [
         "Arduino Uno",
@@ -2434,6 +2396,8 @@ elif page == "🤖 Robotics":
                 i,
             )
 
+    render_dedicated_chatbot("Robotics", "🤖 Robotics Agent", provider, mode)
+
 
 # ============================================================
 # DRONES
@@ -2444,9 +2408,6 @@ elif page == "🚁 Drones & Autonomous":
     st.header(
         "🚁 Drones & Autonomous Systems Agent"
     )
-
-    render_section_chatbot("drones", "🚁 Drones & Autonomous Systems Agent", provider, mode)
-    st.divider()
 
     platforms = [
         "Quadcopter",
@@ -2611,6 +2572,8 @@ elif page == "🚁 Drones & Autonomous":
                 "drones",
                 i,
             )
+
+    render_dedicated_chatbot("Drones", "🚁 Drones & Autonomous Systems Agent", provider, mode)
 
 
 # ============================================================
