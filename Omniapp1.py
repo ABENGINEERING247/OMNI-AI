@@ -43,6 +43,11 @@ def init_state():
         "fired_notifications": set(),
         "workflow_running": False,
         "workflow_messages": [],
+        "orchestrator_result": None,
+        "orchestrator_agent": None,
+        "demo_workflow_result": None,
+        "demo_workflow_active": False,
+        "active_workflow_steps": [],
     }
 
     for key, value in defaults.items():
@@ -761,7 +766,7 @@ run_notification_engine()
 
 
 # ============================================================
-# DEMO AGENT WORKFLOW
+# DEMO AGENT WORKFLOW HELPER
 # ============================================================
 
 def create_demo_workflow(request):
@@ -821,43 +826,6 @@ def create_demo_workflow(request):
     )
 
     return workflow
-
-
-def run_demo_workflow(request):
-    if not request.strip():
-        st.warning(
-            "Please enter a workflow request."
-        )
-        return
-
-    workflow = create_demo_workflow(request)
-
-    st.subheader(
-        "🔄 Live Multi-Agent Communication"
-    )
-
-    progress = st.progress(0)
-
-    for index, step in enumerate(workflow):
-        with st.container(border=True):
-            st.markdown(
-                f"### {step['from']} → {step['to']}"
-            )
-
-            st.write(
-                step["message"]
-            )
-
-        progress.progress(
-            int(
-                ((index + 1) / len(workflow))
-                * 100
-            )
-        )
-
-    st.success(
-        "✅ Demo workflow completed successfully."
-    )
 
 
 # ============================================================
@@ -1067,6 +1035,7 @@ elif page == "🧠 AI Orchestrator":
             "10 AM and remind me."
         ),
         height=150,
+        key="orchestrator_input_text"
     )
 
     c1, c2 = st.columns(2)
@@ -1075,66 +1044,84 @@ elif page == "🧠 AI Orchestrator":
         process_button = st.button(
             "🚀 Process Request",
             use_container_width=True,
+            key="orch_process_btn"
         )
 
     with c2:
         workflow_button = st.button(
             "🔄 Play Agent Workflow",
             use_container_width=True,
+            key="orch_workflow_btn"
         )
 
     if process_button:
-
         if not request.strip():
-
-            st.warning(
-                "Please enter a request."
-            )
-
+            st.warning("Please enter a request.")
         else:
-
             agent = detect_agent(request)
-
-            st.success(
-                f"Selected Agent: {agent}"
-            )
+            st.session_state.orchestrator_agent = agent
 
             if mode == "🎮 Demo Mode":
-
-                st.markdown(
-                    demo_response(
-                        request,
-                        agent,
-                    )
+                st.session_state.orchestrator_result = (
+                    demo_response(request, agent),
+                    "Demo Mode",
+                    None
                 )
-
             else:
-
-                with st.spinner(
-                    f"🤖 {provider} is processing..."
-                ):
-                    result, actual_mode, fallback_message = process_with_ai(
-                        request,
-                        agent,
-                        provider,
-                        allow_fallback=True,
-                    )
-
-                if fallback_message:
-                    st.warning(f"⚠️ {fallback_message}")
-
-                if actual_mode == "Demo Mode":
-                    st.info("🎮 Response generated in Demo Mode.")
-                else:
-                    st.success(f"🔑 Response generated using {actual_mode} API.")
-
-                st.markdown(result)
+                with st.spinner(f"🤖 {provider} is processing..."):
+                    try:
+                        res, act_mode, fb_msg = process_with_ai(
+                            request, agent, provider, allow_fallback=True
+                        )
+                        st.session_state.orchestrator_result = (res, act_mode, fb_msg)
+                    except Exception as e:
+                        st.session_state.orchestrator_result = (str(e), "Error", None)
+            st.session_state.workflow_running = False
+            st.session_state.demo_workflow_result = None
 
     if workflow_button:
+        if not request.strip():
+            st.warning("Please enter a workflow request.")
+        else:
+            st.session_state.workflow_running = True
+            st.session_state.demo_workflow_result = create_demo_workflow(request)
+            st.session_state.orchestrator_result = None
 
-        run_demo_workflow(
-            request
-        )
+    # Persistent display for Orchestrator Result (does not auto-hide)
+    if st.session_state.orchestrator_result:
+        res, act_mode, fb_msg = st.session_state.orchestrator_result
+        st.success(f"Selected Agent: {st.session_state.orchestrator_agent}")
+        if fb_msg:
+            st.warning(f"⚠️ {fb_msg}")
+        if act_mode == "Demo Mode":
+            st.info("🎮 Response generated in Demo Mode.")
+        elif act_mode != "Error":
+            st.success(f"🔑 Response generated using {act_mode} API.")
+        
+        st.markdown(res)
+        
+        if st.button("🗑️ Clear Result", key="clear_orch_res"):
+            st.session_state.orchestrator_result = None
+            st.session_state.orchestrator_agent = None
+            st.rerun()
+
+    # Persistent display for Workflow Result (does not auto-hide)
+    if st.session_state.workflow_running and st.session_state.demo_workflow_result:
+        st.subheader("🔄 Live Multi-Agent Communication")
+        workflow = st.session_state.demo_workflow_result
+        
+        progress = st.progress(100)
+        for step in workflow:
+            with st.container(border=True):
+                st.markdown(f"### {step['from']} → {step['to']}")
+                st.write(step["message"])
+
+        st.success("✅ Demo workflow completed successfully.")
+        
+        if st.button("🗑️ Clear Workflow Result", key="clear_orch_wf"):
+            st.session_state.workflow_running = False
+            st.session_state.demo_workflow_result = None
+            st.rerun()
 
 
 # ============================================================
@@ -1160,16 +1147,34 @@ elif page == "🔄 Agent Workflow Demo":
             "tomorrow at 10 AM and remind me."
         ),
         height=120,
+        key="demo_workflow_input_text"
     )
 
     if st.button(
         "▶️ PLAY DEMO WORKFLOW",
         use_container_width=True,
+        key="play_demo_wf_btn"
     ):
+        st.session_state.demo_workflow_active = True
+        st.session_state.active_workflow_steps = create_demo_workflow(request)
 
-        run_demo_workflow(
-            request
-        )
+    # Persistent display for Workflow Demo (does not auto-hide)
+    if st.session_state.get("demo_workflow_active", False):
+        st.subheader("🔄 Live Multi-Agent Communication")
+        workflow = st.session_state.get("active_workflow_steps", [])
+        
+        progress = st.progress(100)
+        for step in workflow:
+            with st.container(border=True):
+                st.markdown(f"### {step['from']} → {step['to']}")
+                st.write(step["message"])
+
+        st.success("✅ Demo workflow completed successfully.")
+        
+        if st.button("🗑️ Clear Workflow Demo Result", key="clear_demo_wf_res"):
+            st.session_state.demo_workflow_active = False
+            st.session_state.active_workflow_steps = []
+            st.rerun()
 
 
 # ============================================================
@@ -1200,7 +1205,8 @@ elif page == "💬 OMNI AI Chatbot":
                 )
 
     user_prompt = st.chat_input(
-        "Ask OMNI AI anything..."
+        "Ask OMNI AI anything...",
+        key="omni_chatbot_input"
     )
 
     if user_prompt:
@@ -1264,6 +1270,7 @@ elif page == "💬 OMNI AI Chatbot":
     if st.button(
         "🗑️ Clear Chat",
         use_container_width=True,
+        key="clear_omni_chat_btn"
     ):
 
         st.session_state.chat_history = []
@@ -2584,7 +2591,7 @@ st.divider()
 
 st.caption(
     "🤖 OMNI AI | "
-    "Omni-Agentic Intelligent Automation System Developed by AI Markhors Team| "
+    "Omni-Agentic Intelligent Automation System | "
     "10 AI Agents | "
     "Demo + Grok + OpenAI API Modes | "
     "Streamlit + Python | "
