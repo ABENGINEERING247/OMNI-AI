@@ -2584,7 +2584,7 @@ st.divider()
 
 st.caption(
     "🤖 OMNI AI | "
-    "Omni-Agentic Intelligent Automation System | "
+    "Omni-Agentic Intelligent Automation System Developed by AI Markhors Team| "
     "10 AI Agents | "
     "Demo + Grok + OpenAI API Modes | "
     "Streamlit + Python | "
